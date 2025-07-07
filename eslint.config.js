@@ -29,6 +29,8 @@ export default [
         exports: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
         // Testing globals
         jest: true,
         expect: true,

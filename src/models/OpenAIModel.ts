@@ -137,7 +137,10 @@ export class OpenAIModel implements ModelInterface {
       });
 
       // Race the API call against the timeout
-      const response = await Promise.race([apiCallPromise, timeoutPromise]) as OpenAI.Chat.Completions.ChatCompletion;
+      const response = (await Promise.race([
+        apiCallPromise,
+        timeoutPromise,
+      ])) as OpenAI.Chat.Completions.ChatCompletion;
 
       return response.choices[0]?.message?.content || 'Failed to generate summary';
     } catch (error) {
