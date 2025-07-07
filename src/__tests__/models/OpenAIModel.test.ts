@@ -1,6 +1,7 @@
 import { OpenAIModel } from '../../models/OpenAIModel.js';
 import { jest, expect, describe, beforeEach, afterAll, it } from '@jest/globals';
 import { logger } from '../../utils/logger.js';
+import OpenAI from 'openai';
 
 // We'll use a different approach - instead of mocking OpenAI directly,
 // we'll leverage the test mode in the OpenAIModel class
@@ -181,7 +182,7 @@ describe('OpenAIModel', () => {
           }),
         },
       },
-    };
+    } as unknown as OpenAI;
 
     // Create a model and set the mock client
     const model = new OpenAIModel();
@@ -231,7 +232,7 @@ describe('OpenAIModel', () => {
           }),
         },
       },
-    };
+    } as unknown as OpenAI;
 
     // Create a model and set the mock client
     const model = new OpenAIModel();
@@ -268,10 +269,12 @@ describe('OpenAIModel', () => {
     const mockClient = {
       chat: {
         completions: {
-          create: jest.fn().mockRejectedValue(new Error('API error from mock client')),
+          create: jest.fn().mockImplementation(() => {
+            throw new Error('API error from mock client');
+          }),
         },
       },
-    };
+    } as unknown as OpenAI;
 
     // Create a model and set the mock client
     const model = new OpenAIModel();

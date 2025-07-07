@@ -5,16 +5,18 @@ import { jest, expect, describe, beforeEach, afterAll, it } from '@jest/globals'
 jest.mock('@google/generative-ai', () => {
   // Create a mock class for GoogleGenerativeAI
   class MockGoogleGenerativeAI {
+    private apiKey: string;
+
     constructor(apiKey: string) {
       this.apiKey = apiKey;
     }
 
-    getGenerativeModel({ model: _model }: { model: string }): Record<string, unknown> {
+    getGenerativeModel({ model: _model }: { model: string }) {
       return {
         startChat: jest.fn().mockReturnValue({
           sendMessage: jest.fn().mockResolvedValue({
             response: {
-              text: jest.fn().mockReturnValue('This is a mock summary'),
+              text: () => 'This is a mock summary',
             },
           }),
         }),

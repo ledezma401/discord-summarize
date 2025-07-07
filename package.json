@@ -7,14 +7,16 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon --exec ts-node src/index.ts",
-    "build": "tsc",
+    "build": "tsc --project tsconfig.json",
+    "build:test": "tsc --project tsconfig.test.json",
     "test": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.cjs --testPathIgnorePatterns=integration",
     "test:watch": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.cjs --watch --testPathIgnorePatterns=integration",
     "test:coverage": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.cjs --coverage --testPathIgnorePatterns=integration",
     "test:integration": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.cjs --testMatch='**/*.integration.test.ts'",
     "test:all": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.cjs",
-    "lint": "eslint 'src/**/*.ts' --ignore-pattern 'dist/' --ignore-pattern 'node_modules/' --ignore-pattern 'coverage/'",
-    "lint:fix": "eslint 'src/**/*.ts' --ignore-pattern 'dist/' --ignore-pattern 'node_modules/' --ignore-pattern 'coverage/' --fix",
+    "lint": "eslint 'src/**/*.ts' --ignore-pattern 'dist/' --ignore-pattern 'node_modules/' --ignore-pattern 'coverage/' --ignore-pattern 'src/**/*.test.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' --ignore-pattern 'dist/' --ignore-pattern 'node_modules/' --ignore-pattern 'coverage/' --ignore-pattern 'src/**/*.test.ts' --fix",
+    "lint:test": "eslint 'src/**/*.test.ts' --ignore-pattern 'dist/' --ignore-pattern 'node_modules/' --ignore-pattern 'coverage/'",
     "prepare": "husky"
   },
   "lint-staged": {

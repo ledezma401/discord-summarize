@@ -16,8 +16,8 @@ jest.mock('../../models/ModelFactory.js');
 // Setup ModelFactory mock implementation
 beforeEach(() => {
   // Reset the mock implementation
-  ModelFactory.createModel = jest.fn();
-  ModelFactory.getAvailableModels = jest.fn().mockReturnValue(['openai', 'mock']);
+  ModelFactory.createModel = jest.fn() as unknown as typeof ModelFactory.createModel;
+  ModelFactory.getAvailableModels = jest.fn().mockReturnValue(['openai', 'mock']) as unknown as typeof ModelFactory.getAvailableModels;
 });
 
 // Mock OpenAI model for testing
