@@ -120,4 +120,19 @@ describe('OpenAIModel', () => {
     const summary = await model.summarize(messages);
     expect(summary).toBe('This is a mock summary of 3 messages from OpenAI model');
   });
+
+  it('should provide a formatted mock summary when no API key is set in test environment', async () => {
+    // Remove the API key
+    delete process.env.OPENAI_API_KEY;
+
+    // Create a model without an API key
+    const model = new OpenAIModel();
+    const messages = ['Message 1', 'Message 2', 'Message 3'];
+
+    // The summarize method should return a formatted mock summary
+    const summary = await model.summarize(messages, true);
+    expect(summary).toContain('# 📝 Summary');
+    expect(summary).toContain('**Main Topics:**');
+    expect(summary).toContain('## 👥 Perspectives');
+  });
 });

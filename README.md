@@ -48,13 +48,19 @@ A Discord bot that summarizes chat conversations using AI models.
      CLIENT_ID=your_discord_client_id_here
      OPENAI_API_KEY=your_openai_api_key_here
      OPENAI_MODEL=gpt-4-turbo
+     GEMINI_API_KEY=your_gemini_api_key_here
+     GEMINI_MODEL=gemini-2.5-pro
      ```
    - Replace `your_discord_bot_token_here` with your Discord bot token
    - Replace `your_discord_client_id_here` with your Discord application ID
    - Replace `your_openai_api_key_here` with your OpenAI API key
+   - Replace `your_gemini_api_key_here` with your Google Gemini API key (optional, only if you want to use the Gemini model)
 
-5. **Run the Bot**
-   - Install dependencies: `npm install`
+5. **Install Dependencies**
+   - Install main dependencies: `npm install`
+   - If you want to use the Gemini model, install the Google Generative AI SDK: `npm install @google/generative-ai`
+
+6. **Run the Bot**
    - Build the bot: `npm run build`
    - Start the bot: `npm start`
 
@@ -68,6 +74,7 @@ Once the bot is running and added to your server, you can use the following comm
   - Optional parameters:
     - `!summarize 100` or `!tldr 100` - Summarize the last 100 messages
     - `!summarize 30 openai` or `!tldr 30 openai` - Summarize the last 30 messages using the OpenAI model
+    - `!summarize 30 gemini` or `!tldr 30 gemini` - Summarize the last 30 messages using the Gemini model
 
 - **Formatted Summary Commands**:
   - Type `!summarizeg` in any channel to get a formatted summary with topics and user perspectives.
@@ -79,13 +86,25 @@ Once the bot is running and added to your server, you can use the following comm
   - Optional parameters work the same as standard commands:
     - `!summarizeg 100` or `!tldrg 100` - Summarize the last 100 messages
     - `!summarizeg 30 openai` or `!tldrg 30 openai` - Summarize the last 30 messages using the OpenAI model
+    - `!summarizeg 30 gemini` or `!tldrg 30 gemini` - Summarize the last 30 messages using the Gemini model
 
 - **Slash Commands**: 
   - Standard summary: Type `/summarize` or `/tldr` and use the interactive options.
   - Formatted summary: Type `/summarizeg` or `/tldrg` and use the interactive options.
   - Optional parameters for all slash commands:
-    - `count` - Number of messages to summarize (default: 50)
-    - `model` - AI model to use (default: openai)
+    - `count` - Number of messages to summarize (default: 50, must be between 1 and 500)
+    - `model` - AI model to use (default: openai, options: openai, gemini)
+
+- **Validation Rules**:
+  - The `count` parameter must be between 1 and 500 messages
+  - For OpenAI, only the following models are supported:
+    - `gpt-4o-mini`
+    - `gpt-4-turbo` (default)
+    - `gpt-4`
+    - `gpt-3.5-turbo`
+  - For Gemini, only the following models are supported:
+    - `gemini-2.5-pro` (default)
+    - `gemini-2.5-flash`
 
 ## Local Development
 

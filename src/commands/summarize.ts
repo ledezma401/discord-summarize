@@ -29,6 +29,13 @@ export async function handleSummarizeCommand(
 
     // Parse command arguments
     const messageCount = count || config.defaultMessageCount;
+
+    // Validate count parameter
+    if (messageCount < 1 || messageCount > 500) {
+      await reply(source, 'Error: Count must be between 1 and 500.');
+      return;
+    }
+
     const model = modelName || 'openai';
 
     // Fetch messages
@@ -131,4 +138,3 @@ async function reply(
   }
   return undefined;
 }
-

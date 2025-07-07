@@ -17,4 +17,13 @@ describe('MockModel', () => {
     const summary = await model.summarize(messages);
     expect(summary).toBe('Summarized 3 messages');
   });
+
+  it('should summarize messages with formatted output', async () => {
+    const model = new MockModel();
+    const messages = ['Message 1', 'Message 2', 'Message 3'];
+    const summary = await model.summarize(messages, true);
+    expect(summary).toContain('# 📝 Summary');
+    expect(summary).toContain('**Main Topics:**');
+    expect(summary).toContain('## 👥 Perspectives');
+  });
 });

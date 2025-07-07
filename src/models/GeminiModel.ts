@@ -1,70 +1,71 @@
 import { ModelInterface } from './ModelInterface';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
 /**
- * OpenAI model implementation
+ * Gemini model implementation
  */
-export class OpenAIModel implements ModelInterface {
-  private openai: OpenAI | null = null;
+export class GeminiModel implements ModelInterface {
+  private genAI: GoogleGenerativeAI | null = null;
   private model: string;
   private isTestEnvironment: boolean;
 
   /**
-   * Create a new OpenAI model instance
+   * Create a new Gemini model instance
    */
   constructor() {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     this.isTestEnvironment = process.env.NODE_ENV === 'test';
 
     if (!apiKey && !this.isTestEnvironment) {
-      throw new Error('OPENAI_API_KEY environment variable is not set');
+      throw new Error('GEMINI_API_KEY environment variable is not set');
     }
 
     if (apiKey) {
-      this.openai = new OpenAI({
-        apiKey,
-      });
+      this.genAI = new GoogleGenerativeAI(apiKey);
     }
 
     // Get the model from environment or use default
-    const requestedModel = process.env.OPENAI_MODEL || 'gpt-4-turbo';
+    const requestedModel = process.env.GEMINI_MODEL || 'gemini-2.5-pro';
 
     // Validate the model - only allow specific models
-    const allowedModels = ['gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'];
+    const allowedModels = ['gemini-2.5-pro', 'gemini-2.5-flash'];
 
     // In test environment, also allow 'test-model'
     if (this.isTestEnvironment && requestedModel === 'test-model') {
       // Allow test-model in test environment
     } else if (!allowedModels.includes(requestedModel)) {
-      throw new Error(`Invalid OpenAI model: ${requestedModel}. Allowed models are: ${allowedModels.join(', ')}`);
+      throw new Error(`Invalid Gemini model: ${requestedModel}. Allowed models are: ${allowedModels.join(', ')}`);
     }
 
     this.model = requestedModel;
   }
 
   /**
-   * Summarize a list of messages using OpenAI
+   * Summarize a list of messages using Gemini
    * @param messages Array of messages to summarize
    * @param formatted Optional flag to generate a formatted summary with topics and user perspectives
    * @returns Promise resolving to the summarized text
    */
   public async summarize(messages: string[], formatted: boolean = false): Promise<string> {
     // In test environment without API key, return a mock summary
-    if (this.isTestEnvironment && !this.openai) {
+    if (this.isTestEnvironment && !this.genAI) {
       if (formatted) {
         return `# 📝 Summary\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2`;
       }
-      return `This is a mock summary of ${messages.length} messages from OpenAI model`;
+      return `This is a mock summary of ${messages.length} messages from Gemini model`;
     }
 
     try {
-      if (!this.openai) {
-        throw new Error('OpenAI client not initialized');
+      if (!this.genAI) {
+        throw new Error('Gemini client not initialized');
       }
+
+      // Get the generative model
+      const geminiModel = this.genAI.getGenerativeModel({ model: this.model });
 
       let systemPrompt = 'You are a helpful assistant that summarizes Discord conversations. ';
       let userPrompt = '';
@@ -88,26 +89,28 @@ export class OpenAIModel implements ModelInterface {
         userPrompt = `Please summarize the following conversation:\n\n${messages.join('\n')}`;
       }
 
-      const response = await this.openai.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
+      // Create the chat session
+      const chat = geminiModel.startChat({
+        history: [
           {
             role: 'user',
-            content: userPrompt,
+            parts: [{ text: systemPrompt }],
+          },
+          {
+            role: 'model',
+            parts: [{ text: 'I understand. I will summarize Discord conversations according to your instructions.' }],
           },
         ],
-        temperature: 0.7,
-        max_tokens: 500,
       });
 
-      return response.choices[0]?.message?.content || 'Failed to generate summary';
+      // Generate the response
+      const result = await chat.sendMessage(userPrompt);
+      const response = result.response;
+
+      return response.text() || 'Failed to generate summary';
     } catch (error) {
-      console.error('Error summarizing with OpenAI:', error);
-      throw new Error(`Failed to summarize with OpenAI: ${(error as Error).message}`);
+      console.error('Error summarizing with Gemini:', error);
+      throw new Error(`Failed to summarize with Gemini: ${(error as Error).message}`);
     }
   }
 
@@ -116,6 +119,6 @@ export class OpenAIModel implements ModelInterface {
    * @returns The name of the model
    */
   public getName(): string {
-    return 'OpenAI';
+    return 'Gemini';
   }
 }
