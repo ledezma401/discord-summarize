@@ -1,5 +1,5 @@
-import { ModelFactory } from '../../models/ModelFactory';
-import { ModelInterface } from '../../models/ModelInterface';
+import { ModelFactory } from '../../models/ModelFactory.js';
+import { ModelInterface } from '../../models/ModelInterface.js';
 
 // Mock model implementation for testing
 class MockModel implements ModelInterface {
@@ -18,7 +18,7 @@ describe('ModelFactory', () => {
     // This is a workaround since we can't directly access the private models Map
     try {
       ModelFactory.createModel('mockmodel');
-    } catch (e) {
+    } catch {
       // Expected error if model is not registered
     }
   });

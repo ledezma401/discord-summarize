@@ -1,5 +1,5 @@
 import { ModelInterface } from './ModelInterface.js';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import { logger } from '../utils/logger.js';
 
@@ -7,42 +7,40 @@ import { logger } from '../utils/logger.js';
 dotenv.config();
 
 /**
- * OpenAI model implementation
+ * Gemini model implementation
  */
-export class OpenAIModel implements ModelInterface {
-  private openai: OpenAI | null = null;
+export class GeminiModel implements ModelInterface {
+  private genAI: GoogleGenerativeAI | null = null;
   private model: string;
   private isTestEnvironment: boolean;
 
   /**
-   * Create a new OpenAI model instance
+   * Create a new Gemini model instance
    */
   constructor() {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     this.isTestEnvironment = process.env.NODE_ENV === 'test';
 
     if (!apiKey && !this.isTestEnvironment) {
-      throw new Error('OPENAI_API_KEY environment variable is not set');
+      throw new Error('GEMINI_API_KEY environment variable is not set');
     }
 
     if (apiKey) {
-      this.openai = new OpenAI({
-        apiKey,
-      });
+      this.genAI = new GoogleGenerativeAI(apiKey);
     }
 
     // Get the model from environment or use default
-    const requestedModel = process.env.OPENAI_MODEL || 'gpt-4-turbo';
+    const requestedModel = process.env.GEMINI_MODEL || 'gemini-2.5-pro';
 
     // Validate the model - only allow specific models
-    const allowedModels = ['gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'];
+    const allowedModels = ['gemini-2.5-pro', 'gemini-2.5-flash'];
 
     // In test environment, also allow 'test-model'
     if (this.isTestEnvironment && requestedModel === 'test-model') {
       // Allow test-model in test environment
     } else if (!allowedModels.includes(requestedModel)) {
       throw new Error(
-        `Invalid OpenAI model: ${requestedModel}. Allowed models are: ${allowedModels.join(', ')}`,
+        `Invalid Gemini model: ${requestedModel}. Allowed models are: ${allowedModels.join(', ')}`,
       );
     }
 
@@ -50,17 +48,7 @@ export class OpenAIModel implements ModelInterface {
   }
 
   /**
-   * For testing purposes - allows overriding the OpenAI client
-   * @param client The OpenAI client to use
-   */
-  public setOpenAIClient(client: OpenAI): void {
-    if (this.isTestEnvironment) {
-      this.openai = client;
-    }
-  }
-
-  /**
-   * Summarize a list of messages using OpenAI
+   * Summarize a list of messages using Gemini
    * @param messages Array of messages to summarize
    * @param formatted Optional flag to generate a formatted summary with topics and user perspectives
    * @returns Promise resolving to the summarized text
@@ -70,30 +58,26 @@ export class OpenAIModel implements ModelInterface {
     formatted: boolean = false,
     timeout: number = 30000,
   ): Promise<string> {
-    // For testing timeouts - check this first regardless of environment
-    if (timeout === 0) {
-      throw new Error('Timeout error');
-    }
-
     // In test environment without API key, return a mock summary
-    if (this.isTestEnvironment && !this.openai) {
+    if (this.isTestEnvironment && !this.genAI) {
       if (formatted) {
         return `# 📝 Summary\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2`;
       }
-      return `This is a mock summary of ${messages.length} messages from OpenAI model`;
+      return `This is a mock summary of ${messages.length} messages from Gemini model`;
+    }
+
+    // For testing timeouts
+    if (this.isTestEnvironment && timeout === 0) {
+      throw new Error('Timeout error');
     }
 
     try {
-      if (!this.openai) {
-        throw new Error('OpenAI client not initialized');
+      if (!this.genAI) {
+        throw new Error('Gemini client not initialized');
       }
 
-      // Set up a timeout promise that rejects after the specified timeout
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        if (timeout > 0) {
-          setTimeout(() => reject(new Error('Timeout error')), timeout);
-        }
-      });
+      // Get the generative model
+      const geminiModel = this.genAI.getGenerativeModel({ model: this.model });
 
       let systemPrompt = 'You are a helpful assistant that summarizes Discord conversations. ';
       let userPrompt = '';
@@ -119,33 +103,42 @@ export class OpenAIModel implements ModelInterface {
         userPrompt = `Please summarize the following conversation:\n\n${messages.join('\n')}`;
       }
 
-      // Create the API call promise
-      const apiCallPromise = this.openai.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
+      // Create the chat session
+      const chat = geminiModel.startChat({
+        history: [
           {
             role: 'user',
-            content: userPrompt,
+            parts: [{ text: systemPrompt }],
+          },
+          {
+            role: 'model',
+            parts: [
+              {
+                text: 'I understand. I will summarize Discord conversations according to your instructions.',
+              },
+            ],
           },
         ],
-        temperature: 0.7,
-        max_tokens: 500,
       });
 
-      // Race the API call against the timeout
-      const response = (await Promise.race([
-        apiCallPromise,
-        timeoutPromise,
-      ])) as OpenAI.Chat.Completions.ChatCompletion;
+      // Generate the response
+      const result = await chat.sendMessage(userPrompt);
+      const response = result.response;
 
-      return response.choices[0]?.message?.content || 'Failed to generate summary';
+      return response.text() || 'Failed to generate summary';
     } catch (error) {
-      logger.error('Error summarizing with OpenAI:', error);
-      throw new Error(`Failed to summarize with OpenAI: ${(error as Error).message}`);
+      logger.error('Error summarizing with Gemini:', error);
+      throw new Error(`Failed to summarize with Gemini: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * For testing purposes - allows overriding the Gemini client
+   * @param client The Gemini client to use
+   */
+  public setGeminiClient(client: GoogleGenerativeAI): void {
+    if (this.isTestEnvironment) {
+      this.genAI = client;
     }
   }
 
@@ -154,6 +147,6 @@ export class OpenAIModel implements ModelInterface {
    * @returns The name of the model
    */
   public getName(): string {
-    return 'OpenAI';
+    return 'Gemini';
   }
 }

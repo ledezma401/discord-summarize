@@ -1,64 +1,79 @@
-import { Message, CommandInteraction, TextChannel, Collection, EmbedBuilder } from 'discord.js';
-import { handleSummarizeGCommand } from '../../commands/summarizeg';
-import { ModelFactory } from '../../models/ModelFactory';
-import { OpenAIModel } from '../../models/OpenAIModel';
-import { MockModel } from '../../models/MockModel';
-import { config } from '../../utils/config';
+import { Message, CommandInteraction, TextChannel, Collection } from 'discord.js';
+import { handleSummarizeGCommand } from '../../commands/summarizeg.js';
+import { ModelFactory } from '../../models/ModelFactory.js';
+import { jest, expect, describe, beforeEach, it } from '@jest/globals';
 
 // Mock the config
-jest.mock('../../utils/config', () => ({
+jest.mock('../../utils/config.js', () => ({
   config: {
-    defaultMessageCount: 50
-  }
+    defaultMessageCount: 50,
+  },
 }));
 
-// Mock the ModelFactory
-jest.mock('../../models/ModelFactory');
+// Mock the ModelFactory module
+jest.mock('../../models/ModelFactory.js');
+
+// Setup ModelFactory mock implementation
+beforeEach(() => {
+  // Reset the mock implementation
+  ModelFactory.createModel = jest.fn() as unknown as typeof ModelFactory.createModel;
+  ModelFactory.getAvailableModels = jest.fn().mockReturnValue(['openai', 'mock']) as unknown as typeof ModelFactory.getAvailableModels;
+});
 
 // Mock OpenAI model for testing
-jest.mock('../../models/OpenAIModel', () => {
+jest.mock('../../models/OpenAIModel.js', () => {
   return {
     OpenAIModel: jest.fn().mockImplementation(() => {
       return {
-        summarize: jest.fn().mockImplementation((messages, formatted) => {
+        summarize: jest.fn().mockImplementation((messages, formatted, timeout) => {
+          if (timeout === 0) {
+            throw new Error('Timeout error');
+          }
           if (formatted) {
-            return Promise.resolve('# 📝 Summary\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2');
+            return Promise.resolve(
+              '# 📝 Summary\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2',
+            );
           }
           return Promise.resolve('This is a summary from OpenAI');
         }),
-        getName: jest.fn().mockReturnValue('OpenAI')
+        getName: jest.fn().mockReturnValue('OpenAI'),
       };
-    })
+    }),
   };
 });
 
 // Mock MockModel for testing
-jest.mock('../../models/MockModel', () => {
+jest.mock('../../models/MockModel.js', () => {
   return {
     MockModel: jest.fn().mockImplementation(() => {
       return {
-        summarize: jest.fn().mockImplementation((messages, formatted) => {
+        summarize: jest.fn().mockImplementation((messages, formatted, timeout) => {
+          if (timeout === 0) {
+            throw new Error('Timeout error');
+          }
           if (formatted) {
-            return Promise.resolve('# 📝 Summary\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2');
+            return Promise.resolve(
+              '# 📝 Summary\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2',
+            );
           }
           return Promise.resolve('This is a summary from MockModel');
         }),
-        getName: jest.fn().mockReturnValue('MockModel')
+        getName: jest.fn().mockReturnValue('MockModel'),
       };
-    })
+    }),
   };
 });
 
 // Mock the summarizeg module functions
-jest.mock('../../commands/summarizeg', () => {
+jest.mock('../../commands/summarizeg.js', () => {
   // Get the original module
-  const originalModule = jest.requireActual('../../commands/summarizeg');
+  const originalModule = jest.requireActual('../../commands/summarizeg.js');
 
   // Mock the internal functions
   return {
     ...originalModule,
     // Export the handleSummarizeGCommand function but mock the internal functions
-    handleSummarizeGCommand: jest.fn().mockImplementation(originalModule.handleSummarizeGCommand)
+    handleSummarizeGCommand: jest.fn().mockImplementation(originalModule.handleSummarizeGCommand),
   };
 });
 
@@ -68,7 +83,7 @@ describe('handleSummarizeGCommand', () => {
   let mockInteraction: CommandInteraction;
   let mockChannel: TextChannel;
   let mockMessages: Collection<string, Message>;
-  let mockOpenAIModel: any;
+  let mockOpenAIModel: { summarize: jest.Mock; getName: jest.Mock };
   let mockReplyMessage: Message & { edit: jest.Mock };
 
   beforeEach(() => {
@@ -113,12 +128,24 @@ describe('handleSummarizeGCommand', () => {
       replied: false,
     } as unknown as CommandInteraction & { editReply: jest.Mock };
 
-    // Create mock OpenAI model
-    mockOpenAIModel = new OpenAIModel();
+    // Create a mock OpenAI model with a jest.fn() for summarize
+    mockOpenAIModel = {
+      summarize: jest.fn().mockImplementation((messages, formatted, timeout) => {
+        if (timeout === 0) {
+          throw new Error('Timeout error');
+        }
+        if (formatted) {
+          return Promise.resolve(
+            '# 📝 Summary\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2',
+          );
+        }
+        return Promise.resolve('This is a summary from OpenAI');
+      }),
+      getName: jest.fn().mockReturnValue('OpenAI'),
+    };
 
-    // Mock ModelFactory.createModel
-    (ModelFactory.createModel as jest.Mock).mockReturnValue(mockOpenAIModel);
-    (ModelFactory.getAvailableModels as jest.Mock).mockReturnValue(['openai', 'mock']);
+    // Set up the ModelFactory.createModel mock to return our mockOpenAIModel
+    ModelFactory.createModel.mockReturnValue(mockOpenAIModel);
   });
 
   it('should handle message command', async () => {
@@ -132,7 +159,7 @@ describe('handleSummarizeGCommand', () => {
 
     // Check that a reply was sent
     expect(mockMessage.reply).toHaveBeenCalled();
-    
+
     // Check that the summarize method was called with formatted=true
     expect(mockOpenAIModel.summarize).toHaveBeenCalledWith(expect.any(Array), true);
   });
@@ -156,7 +183,7 @@ describe('handleSummarizeGCommand', () => {
 
     // Check that a reply was sent
     expect(mockInteraction.reply).toHaveBeenCalled();
-    
+
     // Check that the summarize method was called with formatted=true
     expect(mockOpenAIModel.summarize).toHaveBeenCalledWith(expect.any(Array), true);
   });
@@ -173,7 +200,7 @@ describe('handleSummarizeGCommand', () => {
 
   it('should handle errors when creating model', async () => {
     // Mock ModelFactory.createModel to throw an error
-    (ModelFactory.createModel as jest.Mock).mockImplementation(() => {
+    ModelFactory.createModel.mockImplementation(() => {
       throw new Error('Invalid model');
     });
 
@@ -192,4 +219,22 @@ describe('handleSummarizeGCommand', () => {
     // Check that a reply was sent
     expect(mockMessage.reply).toHaveBeenCalledWith('No messages found to summarize.');
   });
+
+  it('should handle timeout errors', async () => {
+    // Create a mock OpenAI model that throws a timeout error
+    const timeoutModel = {
+      summarize: jest.fn().mockImplementation(() => {
+        throw new Error('Timeout error');
+      }),
+      getName: jest.fn().mockReturnValue('OpenAI'),
+    };
+
+    // Mock ModelFactory.createModel to return the timeout model
+    ModelFactory.createModel.mockReturnValue(timeoutModel);
+
+    await handleSummarizeGCommand(mockMessage);
+
+    // Check that an error reply was sent
+    expect(mockMessage.reply).toHaveBeenCalledWith(expect.stringContaining('Error: Timeout error'));
+  }, 10000); // Increase timeout to 10 seconds
 });

@@ -1,6 +1,7 @@
-import { ModelInterface } from './ModelInterface';
-import { OpenAIModel } from './OpenAIModel';
-import { MockModel } from './MockModel';
+import { ModelInterface } from './ModelInterface.js';
+import { OpenAIModel } from './OpenAIModel.js';
+import { MockModel } from './MockModel.js';
+import { GeminiModel } from './GeminiModel.js';
 
 /**
  * Factory for creating AI model instances
@@ -42,6 +43,9 @@ export class ModelFactory {
 
 // Register the OpenAI model
 ModelFactory.registerModel('openai', OpenAIModel);
+
+// Register the Gemini model
+ModelFactory.registerModel('gemini', GeminiModel);
 
 // Register the Mock model for testing
 if (process.env.NODE_ENV === 'test') {

@@ -1,12 +1,7 @@
-import {
-  Message,
-  CommandInteraction,
-  TextChannel,
-  EmbedBuilder,
-  Collection,
-} from 'discord.js';
-import { ModelFactory } from '../models/ModelFactory';
-import { config } from '../utils/config';
+import { Message, CommandInteraction, TextChannel, EmbedBuilder, Collection } from 'discord.js';
+import { ModelFactory } from '../models/ModelFactory.js';
+import { config } from '../utils/config.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Handle the summarizeg command
@@ -29,6 +24,13 @@ export async function handleSummarizeGCommand(
 
     // Parse command arguments
     const messageCount = count || config.defaultMessageCount;
+
+    // Validate count parameter
+    if (messageCount < 1 || messageCount > 500) {
+      await reply(source, 'Error: Count must be between 1 and 500.');
+      return;
+    }
+
     const model = modelName || 'openai';
 
     // Fetch messages
@@ -69,7 +71,7 @@ export async function handleSummarizeGCommand(
       );
     }
   } catch (error) {
-    console.error('Error in summarizeg command:', error);
+    logger.error('Error in summarizeg command:', error);
     await reply(source, `An error occurred: ${(error as Error).message}`);
   }
 }
@@ -80,12 +82,15 @@ export async function handleSummarizeGCommand(
  * @param count Number of messages to fetch
  * @returns Array of messages
  */
-async function fetchMessages(channel: TextChannel, count: number): Promise<Collection<string, Message>> {
+async function fetchMessages(
+  channel: TextChannel,
+  count: number,
+): Promise<Collection<string, Message>> {
   try {
     const messages = await channel.messages.fetch({ limit: count });
     return messages;
   } catch (error) {
-    console.error('Error fetching messages:', error);
+    logger.error('Error fetching messages:', error);
     throw new Error('Failed to fetch messages from the channel.');
   }
 }
@@ -123,11 +128,12 @@ async function reply(
       return await source.reply(content);
     } else if (source.deferred || source.replied) {
       await source.editReply(content);
+      return undefined;
     } else {
       await source.reply(content);
     }
   } catch (error) {
-    console.error('Error replying:', error);
+    logger.error('Error replying:', error);
   }
   return undefined;
 }

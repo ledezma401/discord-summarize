@@ -1,6 +1,7 @@
 import { Client, Events, ChatInputCommandInteraction } from 'discord.js';
-import { handleSummarizeCommand } from './summarize';
-import { handleSummarizeGCommand } from './summarizeg';
+import { handleSummarizeCommand } from './summarize.js';
+import { handleSummarizeGCommand } from './summarizeg.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Register all commands with the Discord client
@@ -69,7 +70,7 @@ export function registerCommands(client: Client): void {
           await handleSummarizeGCommand(commandInteraction, count, model);
         }
       } catch (error) {
-        console.error('Error handling slash command:', error);
+        logger.error('Error handling slash command:', error);
         await commandInteraction.editReply('An error occurred while processing the command.');
       }
     }

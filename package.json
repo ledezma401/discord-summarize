@@ -3,17 +3,20 @@
   "version": "1.0.0",
   "description": "Summarizes chats using AI",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon --exec ts-node src/index.ts",
-    "build": "tsc",
-    "test": "NODE_ENV=test jest --testPathIgnorePatterns=integration",
-    "test:watch": "NODE_ENV=test jest --watch --testPathIgnorePatterns=integration",
-    "test:coverage": "NODE_ENV=test jest --coverage --testPathIgnorePatterns=integration",
-    "test:integration": "NODE_ENV=test jest --testMatch='**/*.integration.test.ts'",
-    "test:all": "NODE_ENV=test jest",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
+    "build": "tsc --project tsconfig.json",
+    "build:test": "tsc --project tsconfig.test.json",
+    "test": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.cjs --testPathIgnorePatterns=integration",
+    "test:watch": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.cjs --watch --testPathIgnorePatterns=integration",
+    "test:coverage": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.cjs --coverage --testPathIgnorePatterns=integration",
+    "test:integration": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.cjs --testMatch='**/*.integration.test.ts'",
+    "test:all": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.cjs",
+    "lint": "eslint 'src/**/*.ts' --ignore-pattern 'dist/' --ignore-pattern 'node_modules/' --ignore-pattern 'coverage/' --ignore-pattern 'src/**/*.test.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' --ignore-pattern 'dist/' --ignore-pattern 'node_modules/' --ignore-pattern 'coverage/' --ignore-pattern 'src/**/*.test.ts' --fix",
+    "lint:test": "eslint 'src/**/*.test.ts' --ignore-pattern 'dist/' --ignore-pattern 'node_modules/' --ignore-pattern 'coverage/'",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -26,11 +29,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "discord.js": "^14.21.0",
     "dotenv": "^17.0.1",
     "openai": "^5.8.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.30.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.10",
     "@typescript-eslint/eslint-plugin": "^8.35.1",
