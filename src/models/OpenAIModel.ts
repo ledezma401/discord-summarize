@@ -79,7 +79,7 @@ export class OpenAIModel implements ModelInterface {
     }
 
     // For testing timeouts
-    if (this.isTestEnvironment && timeout === 0) {
+    if (timeout === 0) {
       throw new Error('Timeout error');
     }
 
