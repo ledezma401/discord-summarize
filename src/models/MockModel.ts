@@ -11,7 +11,11 @@ export class MockModel implements ModelInterface {
    * @param timeout Optional timeout in milliseconds
    * @returns Promise resolving to a mock summary
    */
-  public async summarize(messages: string[], formatted: boolean = false, timeout: number = 30000): Promise<string> {
+  public async summarize(
+    messages: string[],
+    formatted: boolean = false,
+    timeout: number = 30000,
+  ): Promise<string> {
     // For testing timeouts
     if (timeout === 0) {
       throw new Error('Timeout error');

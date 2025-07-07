@@ -1,6 +1,7 @@
 import { Message, CommandInteraction, TextChannel, EmbedBuilder, Collection } from 'discord.js';
 import { ModelFactory } from '../models/ModelFactory.js';
 import { config } from '../utils/config.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Handle the summarize command
@@ -70,7 +71,7 @@ export async function handleSummarizeCommand(
       );
     }
   } catch (error) {
-    console.error('Error in summarize command:', error);
+    logger.error('Error in summarize command:', error);
     await reply(source, `An error occurred: ${(error as Error).message}`);
   }
 }
@@ -89,7 +90,7 @@ async function fetchMessages(
     const messages = await channel.messages.fetch({ limit: count });
     return messages;
   } catch (error) {
-    console.error('Error fetching messages:', error);
+    logger.error('Error fetching messages:', error);
     throw new Error('Failed to fetch messages from the channel.');
   }
 }
@@ -131,7 +132,7 @@ async function reply(
       await source.reply(content);
     }
   } catch (error) {
-    console.error('Error replying:', error);
+    logger.error('Error replying:', error);
   }
   return undefined;
 }

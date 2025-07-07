@@ -1,5 +1,6 @@
 import { REST, Routes, SlashCommandBuilder } from 'discord.js';
 import { config } from '../utils/config.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Define slash commands
@@ -64,7 +65,7 @@ const commands = [
  */
 export async function registerSlashCommands(): Promise<void> {
   try {
-    console.log('Started refreshing application (/) commands.');
+    logger.info('Started refreshing application (/) commands.');
 
     // Create REST instance
     const rest = new REST({ version: '10' }).setToken(config.discordToken);
@@ -72,8 +73,8 @@ export async function registerSlashCommands(): Promise<void> {
     // Register commands globally (for all guilds)
     await rest.put(Routes.applicationCommands(config.clientId), { body: commands });
 
-    console.log('Successfully reloaded application (/) commands.');
+    logger.info('Successfully reloaded application (/) commands.');
   } catch (error) {
-    console.error('Error registering slash commands:', error);
+    logger.error('Error registering slash commands:', error);
   }
 }

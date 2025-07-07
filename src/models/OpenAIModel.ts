@@ -1,6 +1,7 @@
 import { ModelInterface } from './ModelInterface.js';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
+import { logger } from '../utils/logger.js';
 
 // Load environment variables
 dotenv.config();
@@ -52,7 +53,7 @@ export class OpenAIModel implements ModelInterface {
    * For testing purposes - allows overriding the OpenAI client
    * @param client The OpenAI client to use
    */
-  public setOpenAIClient(client: any): void {
+  public setOpenAIClient(client: OpenAI): void {
     if (this.isTestEnvironment) {
       this.openai = client;
     }
@@ -64,7 +65,11 @@ export class OpenAIModel implements ModelInterface {
    * @param formatted Optional flag to generate a formatted summary with topics and user perspectives
    * @returns Promise resolving to the summarized text
    */
-  public async summarize(messages: string[], formatted: boolean = false, timeout: number = 30000): Promise<string> {
+  public async summarize(
+    messages: string[],
+    formatted: boolean = false,
+    timeout: number = 30000,
+  ): Promise<string> {
     // In test environment without API key, return a mock summary
     if (this.isTestEnvironment && !this.openai) {
       if (formatted) {
@@ -125,7 +130,7 @@ export class OpenAIModel implements ModelInterface {
 
       return response.choices[0]?.message?.content || 'Failed to generate summary';
     } catch (error) {
-      console.error('Error summarizing with OpenAI:', error);
+      logger.error('Error summarizing with OpenAI:', error);
       throw new Error(`Failed to summarize with OpenAI: ${(error as Error).message}`);
     }
   }
