@@ -1,10 +1,4 @@
-import {
-  Message,
-  CommandInteraction,
-  TextChannel,
-  EmbedBuilder,
-  Collection,
-} from 'discord.js';
+import { Message, CommandInteraction, TextChannel, EmbedBuilder, Collection } from 'discord.js';
 import { ModelFactory } from '../models/ModelFactory';
 import { config } from '../utils/config';
 
@@ -87,7 +81,10 @@ export async function handleSummarizeCommand(
  * @param count Number of messages to fetch
  * @returns Array of messages
  */
-async function fetchMessages(channel: TextChannel, count: number): Promise<Collection<string, Message>> {
+async function fetchMessages(
+  channel: TextChannel,
+  count: number,
+): Promise<Collection<string, Message>> {
   try {
     const messages = await channel.messages.fetch({ limit: count });
     return messages;

@@ -40,7 +40,9 @@ export class OpenAIModel implements ModelInterface {
     if (this.isTestEnvironment && requestedModel === 'test-model') {
       // Allow test-model in test environment
     } else if (!allowedModels.includes(requestedModel)) {
-      throw new Error(`Invalid OpenAI model: ${requestedModel}. Allowed models are: ${allowedModels.join(', ')}`);
+      throw new Error(
+        `Invalid OpenAI model: ${requestedModel}. Allowed models are: ${allowedModels.join(', ')}`,
+      );
     }
 
     this.model = requestedModel;
@@ -70,9 +72,10 @@ export class OpenAIModel implements ModelInterface {
       let userPrompt = '';
 
       if (formatted) {
-        systemPrompt += 'Create a well-structured summary with the following format: ' +
+        systemPrompt +=
+          'Create a well-structured summary with the following format: ' +
           '1) A clear summary of the main topics being discussed, ' +
-          '2) Each user\'s opinion or take on the main topics, presented one after another. ' +
+          "2) Each user's opinion or take on the main topics, presented one after another. " +
           'If several topics are discussed by different users, summarize what each person discussed. ' +
           'If an opinion/take cannot be detected for some users, they can be ignored. ' +
           'Use formatting like bold text, bullet points, and emojis to highlight key elements, but keep it minimal to ensure readability. ' +
@@ -84,7 +87,8 @@ export class OpenAIModel implements ModelInterface {
 
         userPrompt = `Please create a structured summary of the following conversation, clearly showing the main topics and each user's opinion or perspective on those topics:\n\n${messages.join('\n')}`;
       } else {
-        systemPrompt += 'Create a concise summary that captures the main points and important details.';
+        systemPrompt +=
+          'Create a concise summary that captures the main points and important details.';
         userPrompt = `Please summarize the following conversation:\n\n${messages.join('\n')}`;
       }
 
