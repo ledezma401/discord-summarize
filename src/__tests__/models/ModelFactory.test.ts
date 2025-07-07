@@ -18,7 +18,7 @@ describe('ModelFactory', () => {
     // This is a workaround since we can't directly access the private models Map
     try {
       ModelFactory.createModel('mockmodel');
-    } catch (e) {
+    } catch {
       // Expected error if model is not registered
     }
   });

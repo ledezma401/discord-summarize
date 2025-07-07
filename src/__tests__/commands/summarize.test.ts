@@ -1,16 +1,13 @@
-import { Message, CommandInteraction, TextChannel, Collection, EmbedBuilder } from 'discord.js';
+import { Message, CommandInteraction, TextChannel, Collection } from 'discord.js';
 import { handleSummarizeCommand } from '../../commands/summarize.js';
 import { ModelFactory } from '../../models/ModelFactory.js';
-import { OpenAIModel } from '../../models/OpenAIModel.js';
-import { MockModel } from '../../models/MockModel.js';
-import { config } from '../../utils/config.js';
 import { jest, expect, describe, beforeEach, it } from '@jest/globals';
 
 // Mock the config
 jest.mock('../../utils/config.js', () => ({
   config: {
-    defaultMessageCount: 50
-  }
+    defaultMessageCount: 50,
+  },
 }));
 
 // Mock the ModelFactory module
@@ -34,9 +31,9 @@ jest.mock('../../models/OpenAIModel.js', () => {
           }
           return Promise.resolve('This is a summary from OpenAI');
         }),
-        getName: jest.fn().mockReturnValue('OpenAI')
+        getName: jest.fn().mockReturnValue('OpenAI'),
       };
-    })
+    }),
   };
 });
 
@@ -51,9 +48,9 @@ jest.mock('../../models/MockModel.js', () => {
           }
           return Promise.resolve('This is a summary from MockModel');
         }),
-        getName: jest.fn().mockReturnValue('MockModel')
+        getName: jest.fn().mockReturnValue('MockModel'),
       };
-    })
+    }),
   };
 });
 
@@ -66,7 +63,7 @@ jest.mock('../../commands/summarize.js', () => {
   return {
     ...originalModule,
     // Export the handleSummarizeCommand function but mock the internal functions
-    handleSummarizeCommand: jest.fn().mockImplementation(originalModule.handleSummarizeCommand)
+    handleSummarizeCommand: jest.fn().mockImplementation(originalModule.handleSummarizeCommand),
   };
 });
 
@@ -76,7 +73,7 @@ describe('handleSummarizeCommand', () => {
   let mockInteraction: CommandInteraction;
   let mockChannel: TextChannel;
   let mockMessages: Collection<string, Message>;
-  let mockOpenAIModel: any;
+  let mockOpenAIModel: { summarize: jest.Mock; getName: jest.Mock };
   let mockReplyMessage: Message & { edit: jest.Mock };
 
   beforeEach(() => {
@@ -129,7 +126,7 @@ describe('handleSummarizeCommand', () => {
         }
         return Promise.resolve('This is a summary from OpenAI');
       }),
-      getName: jest.fn().mockReturnValue('OpenAI')
+      getName: jest.fn().mockReturnValue('OpenAI'),
     };
 
     // Set up the ModelFactory.createModel mock to return our mockOpenAIModel
@@ -208,7 +205,7 @@ describe('handleSummarizeCommand', () => {
       summarize: jest.fn().mockImplementation(() => {
         throw new Error('Timeout error');
       }),
-      getName: jest.fn().mockReturnValue('OpenAI')
+      getName: jest.fn().mockReturnValue('OpenAI'),
     };
 
     // Mock ModelFactory.createModel to return the timeout model

@@ -1,16 +1,15 @@
 import { GeminiModel } from '../../models/GeminiModel.js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { jest, expect, describe, beforeEach, afterAll, it } from '@jest/globals';
 
 // Mock the GoogleGenerativeAI module
 jest.mock('@google/generative-ai', () => {
   // Create a mock class for GoogleGenerativeAI
   class MockGoogleGenerativeAI {
-    constructor(apiKey) {
+    constructor(apiKey: string) {
       this.apiKey = apiKey;
     }
 
-    getGenerativeModel({ model }) {
+    getGenerativeModel({ model: _model }: { model: string }): Record<string, unknown> {
       return {
         startChat: jest.fn().mockReturnValue({
           sendMessage: jest.fn().mockResolvedValue({
@@ -158,7 +157,13 @@ describe('GeminiModel', () => {
       history: [
         {
           role: 'user',
-          parts: [{ text: expect.stringContaining('You are a helpful assistant that summarizes Discord conversations') }],
+          parts: [
+            {
+              text: expect.stringContaining(
+                'You are a helpful assistant that summarizes Discord conversations',
+              ),
+            },
+          ],
         },
         {
           role: 'model',
@@ -166,7 +171,9 @@ describe('GeminiModel', () => {
         },
       ],
     });
-    expect(mockChat.sendMessage).toHaveBeenCalledWith(expect.stringContaining('Please summarize the following conversation'));
+    expect(mockChat.sendMessage).toHaveBeenCalledWith(
+      expect.stringContaining('Please summarize the following conversation'),
+    );
 
     // Verify the returned summary
     expect(summary).toBe('This is a summary from the mock client');
@@ -213,7 +220,9 @@ describe('GeminiModel', () => {
         },
       ],
     });
-    expect(mockChat.sendMessage).toHaveBeenCalledWith(expect.stringContaining('Please create a structured summary'));
+    expect(mockChat.sendMessage).toHaveBeenCalledWith(
+      expect.stringContaining('Please create a structured summary'),
+    );
 
     // Verify the returned summary
     expect(summary).toBe('This is a formatted summary from the mock client');
@@ -239,7 +248,9 @@ describe('GeminiModel', () => {
     model.setGeminiClient(mockClient);
 
     // Call the summarize method and expect it to throw
-    await expect(model.summarize(['Message 1'])).rejects.toThrow('Failed to summarize with Gemini: API error from mock client');
+    await expect(model.summarize(['Message 1'])).rejects.toThrow(
+      'Failed to summarize with Gemini: API error from mock client',
+    );
   });
 
   it('should handle timeout errors', async () => {

@@ -1,5 +1,6 @@
 import { OpenAIModel } from '../../models/OpenAIModel.js';
 import { jest, expect, describe, beforeEach, afterAll, it } from '@jest/globals';
+import { logger } from '../../utils/logger.js';
 
 // We'll use a different approach - instead of mocking OpenAI directly,
 // we'll leverage the test mode in the OpenAIModel class
@@ -149,7 +150,7 @@ describe('OpenAIModel', () => {
         try {
           throw new Error('API error');
         } catch (error) {
-          console.error('Error summarizing with OpenAI:', error);
+          logger.error('Error summarizing with OpenAI:', error);
           throw new Error(`Failed to summarize with OpenAI: ${(error as Error).message}`);
         }
       }
@@ -158,7 +159,9 @@ describe('OpenAIModel', () => {
     const model = new TestOpenAIModel();
 
     // Call the summarize method and expect it to throw
-    await expect(model.summarize(['Message 1'])).rejects.toThrow('Failed to summarize with OpenAI: API error');
+    await expect(model.summarize(['Message 1'])).rejects.toThrow(
+      'Failed to summarize with OpenAI: API error',
+    );
   });
 
   // Test the API call implementation using the setOpenAIClient method
@@ -194,7 +197,9 @@ describe('OpenAIModel', () => {
       messages: [
         {
           role: 'system',
-          content: expect.stringContaining('You are a helpful assistant that summarizes Discord conversations'),
+          content: expect.stringContaining(
+            'You are a helpful assistant that summarizes Discord conversations',
+          ),
         },
         {
           role: 'user',
@@ -273,7 +278,9 @@ describe('OpenAIModel', () => {
     model.setOpenAIClient(mockClient);
 
     // Call the summarize method and expect it to throw
-    await expect(model.summarize(['Message 1'])).rejects.toThrow('Failed to summarize with OpenAI: API error from mock client');
+    await expect(model.summarize(['Message 1'])).rejects.toThrow(
+      'Failed to summarize with OpenAI: API error from mock client',
+    );
   });
 
   it('should handle timeout errors', async () => {

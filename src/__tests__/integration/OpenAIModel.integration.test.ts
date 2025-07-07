@@ -1,4 +1,6 @@
 import { OpenAIModel } from '../../models/OpenAIModel.js';
+import { describe, it, expect, beforeAll } from '@jest/globals';
+import { logger } from '../../utils/logger.js';
 
 // Skip these tests if no API key is provided
 const hasApiKey = !!process.env.OPENAI_API_KEY;
@@ -9,7 +11,7 @@ describe('OpenAIModel Integration', () => {
   // Skip all tests if no API key is available
   beforeAll(() => {
     if (!hasApiKey) {
-      console.warn('Skipping OpenAI integration tests: No API key provided');
+      logger.warn('Skipping OpenAI integration tests: No API key provided');
     }
   });
 
@@ -23,9 +25,9 @@ describe('OpenAIModel Integration', () => {
     const messages = [
       'User1: Hello everyone!',
       'User2: Hi there, how are you doing?',
-      'User1: I\'m doing great, just working on some code.',
+      "User1: I'm doing great, just working on some code.",
       'User3: What are you working on?',
-      'User1: I\'m building a Discord bot that can summarize conversations.',
+      "User1: I'm building a Discord bot that can summarize conversations.",
     ];
 
     const summary = await model.summarize(messages);
