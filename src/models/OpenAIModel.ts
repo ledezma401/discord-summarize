@@ -70,6 +70,11 @@ export class OpenAIModel implements ModelInterface {
     formatted: boolean = false,
     timeout: number = 30000,
   ): Promise<string> {
+    // For testing timeouts - check this first regardless of environment
+    if (timeout === 0) {
+      throw new Error('Timeout error');
+    }
+
     // In test environment without API key, return a mock summary
     if (this.isTestEnvironment && !this.openai) {
       if (formatted) {
@@ -78,15 +83,17 @@ export class OpenAIModel implements ModelInterface {
       return `This is a mock summary of ${messages.length} messages from OpenAI model`;
     }
 
-    // For testing timeouts
-    if (timeout === 0) {
-      throw new Error('Timeout error');
-    }
-
     try {
       if (!this.openai) {
         throw new Error('OpenAI client not initialized');
       }
+
+      // Set up a timeout promise that rejects after the specified timeout
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        if (timeout > 0) {
+          setTimeout(() => reject(new Error('Timeout error')), timeout);
+        }
+      });
 
       let systemPrompt = 'You are a helpful assistant that summarizes Discord conversations. ';
       let userPrompt = '';
@@ -112,7 +119,8 @@ export class OpenAIModel implements ModelInterface {
         userPrompt = `Please summarize the following conversation:\n\n${messages.join('\n')}`;
       }
 
-      const response = await this.openai.chat.completions.create({
+      // Create the API call promise
+      const apiCallPromise = this.openai.chat.completions.create({
         model: this.model,
         messages: [
           {
@@ -127,6 +135,9 @@ export class OpenAIModel implements ModelInterface {
         temperature: 0.7,
         max_tokens: 500,
       });
+
+      // Race the API call against the timeout
+      const response = await Promise.race([apiCallPromise, timeoutPromise]) as OpenAI.Chat.Completions.ChatCompletion;
 
       return response.choices[0]?.message?.content || 'Failed to generate summary';
     } catch (error) {
