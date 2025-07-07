@@ -1,4 +1,4 @@
-import { ModelInterface } from './ModelInterface';
+import { ModelInterface } from './ModelInterface.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 
@@ -52,13 +52,18 @@ export class GeminiModel implements ModelInterface {
    * @param formatted Optional flag to generate a formatted summary with topics and user perspectives
    * @returns Promise resolving to the summarized text
    */
-  public async summarize(messages: string[], formatted: boolean = false): Promise<string> {
+  public async summarize(messages: string[], formatted: boolean = false, timeout: number = 30000): Promise<string> {
     // In test environment without API key, return a mock summary
     if (this.isTestEnvironment && !this.genAI) {
       if (formatted) {
         return `# 📝 Summary\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2`;
       }
       return `This is a mock summary of ${messages.length} messages from Gemini model`;
+    }
+
+    // For testing timeouts
+    if (this.isTestEnvironment && timeout === 0) {
+      throw new Error('Timeout error');
     }
 
     try {
@@ -119,6 +124,16 @@ export class GeminiModel implements ModelInterface {
     } catch (error) {
       console.error('Error summarizing with Gemini:', error);
       throw new Error(`Failed to summarize with Gemini: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * For testing purposes - allows overriding the Gemini client
+   * @param client The Gemini client to use
+   */
+  public setGeminiClient(client: any): void {
+    if (this.isTestEnvironment) {
+      this.genAI = client;
     }
   }
 

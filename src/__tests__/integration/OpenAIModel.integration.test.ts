@@ -1,4 +1,4 @@
-import { OpenAIModel } from '../../models/OpenAIModel';
+import { OpenAIModel } from '../../models/OpenAIModel.js';
 
 // Skip these tests if no API key is provided
 const hasApiKey = !!process.env.OPENAI_API_KEY;
@@ -29,7 +29,7 @@ describe('OpenAIModel Integration', () => {
     ];
 
     const summary = await model.summarize(messages);
-    
+
     // Verify we got a non-empty response
     expect(summary).toBeTruthy();
     expect(typeof summary).toBe('string');
@@ -46,7 +46,7 @@ describe('OpenAIModel Integration', () => {
     const messages: string[] = [];
 
     const summary = await model.summarize(messages);
-    
+
     // Verify we got a response
     expect(summary).toBeTruthy();
   }, 30000); // Increase timeout for API call

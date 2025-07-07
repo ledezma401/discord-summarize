@@ -6,9 +6,10 @@ export interface ModelInterface {
    * Summarize a list of messages
    * @param messages Array of messages to summarize
    * @param formatted Optional flag to generate a formatted summary with topics and user perspectives
+   * @param timeout Optional timeout in milliseconds
    * @returns Promise resolving to the summarized text
    */
-  summarize(messages: string[], formatted?: boolean): Promise<string>;
+  summarize(messages: string[], formatted?: boolean, timeout?: number): Promise<string>;
 
   /**
    * Get the name of the model

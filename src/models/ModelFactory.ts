@@ -1,7 +1,7 @@
-import { ModelInterface } from './ModelInterface';
-import { OpenAIModel } from './OpenAIModel';
-import { MockModel } from './MockModel';
-import { GeminiModel } from './GeminiModel';
+import { ModelInterface } from './ModelInterface.js';
+import { OpenAIModel } from './OpenAIModel.js';
+import { MockModel } from './MockModel.js';
+import { GeminiModel } from './GeminiModel.js';
 
 /**
  * Factory for creating AI model instances

@@ -1,5 +1,5 @@
-import { ModelFactory } from '../../models/ModelFactory';
-import { ModelInterface } from '../../models/ModelInterface';
+import { ModelFactory } from '../../models/ModelFactory.js';
+import { ModelInterface } from '../../models/ModelInterface.js';
 
 // Mock model implementation for testing
 class MockModel implements ModelInterface {

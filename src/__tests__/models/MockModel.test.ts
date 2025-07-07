@@ -1,4 +1,4 @@
-import { MockModel } from '../../models/MockModel';
+import { MockModel } from '../../models/MockModel.js';
 
 describe('MockModel', () => {
   it('should create an instance', () => {
@@ -25,5 +25,10 @@ describe('MockModel', () => {
     expect(summary).toContain('# 📝 Summary');
     expect(summary).toContain('**Main Topics:**');
     expect(summary).toContain('## 👥 Perspectives');
+  });
+
+  it('should handle timeout errors', async () => {
+    const model = new MockModel();
+    await expect(model.summarize(['Message 1'], false, 0)).rejects.toThrow('Timeout error');
   });
 });

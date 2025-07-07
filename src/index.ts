@@ -1,7 +1,7 @@
 import { Client, GatewayIntentBits, Events } from 'discord.js';
-import { config, validateConfig } from './utils/config';
-import { registerCommands } from './commands';
-import { registerSlashCommands } from './commands/registerSlashCommands';
+import { config, validateConfig } from './utils/config.js';
+import { registerCommands } from './commands/index.js';
+import { registerSlashCommands } from './commands/registerSlashCommands.js';
 
 // Validate configuration
 validateConfig();

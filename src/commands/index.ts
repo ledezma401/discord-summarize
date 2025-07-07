@@ -1,6 +1,6 @@
 import { Client, Events, ChatInputCommandInteraction } from 'discord.js';
-import { handleSummarizeCommand } from './summarize';
-import { handleSummarizeGCommand } from './summarizeg';
+import { handleSummarizeCommand } from './summarize.js';
+import { handleSummarizeGCommand } from './summarizeg.js';
 
 /**
  * Register all commands with the Discord client

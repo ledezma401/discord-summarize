@@ -1,6 +1,6 @@
 import { Message, CommandInteraction, TextChannel, EmbedBuilder, Collection } from 'discord.js';
-import { ModelFactory } from '../models/ModelFactory';
-import { config } from '../utils/config';
+import { ModelFactory } from '../models/ModelFactory.js';
+import { config } from '../utils/config.js';
 
 /**
  * Handle the summarize command
