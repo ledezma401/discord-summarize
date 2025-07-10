@@ -8,11 +8,15 @@ import { logger } from '../utils/logger.js';
  * @param source Message or CommandInteraction that triggered the command
  * @param count Optional number of messages to summarize
  * @param modelName Optional name of the model to use
+ * @param customPrompt Optional custom prompt to personalize the summary
+ * @param language Optional language for the summary (default: 'english', options: 'english', 'spanish')
  */
 export async function handleSummarizeCommand(
   source: Message | CommandInteraction,
   count?: number | null,
   modelName?: string | null,
+  customPrompt?: string | null,
+  language: string = 'english',
 ): Promise<void> {
   try {
     // Determine the channel
@@ -49,7 +53,7 @@ export async function handleSummarizeCommand(
       const aiModel = ModelFactory.createModel(model);
 
       // Generate summary
-      const summary = await aiModel.summarize(formattedMessages);
+      const summary = await aiModel.summarize(formattedMessages, false, undefined, customPrompt || undefined, language);
 
       // Create and send embed with summary
       const embed = new EmbedBuilder()

@@ -17,6 +17,8 @@ export function registerCommands(client: Client): void {
     const args = message.content.split(' ').slice(1);
     let count = null;
     let model = null;
+    let customPrompt = null;
+    let language = 'english'; // Default language
 
     // Parse the count parameter (first argument)
     if (args.length > 0) {
@@ -31,13 +33,28 @@ export function registerCommands(client: Client): void {
       model = args[1];
     }
 
+    // Parse the language parameter (look for --lang=english or --lang=spanish)
+    const langArg = args.find(arg => arg.startsWith('--lang='));
+    if (langArg) {
+      const langValue = langArg.split('=')[1]?.toLowerCase();
+      if (langValue === 'spanish' || langValue === 'english') {
+        language = langValue;
+      }
+    }
+
+    // Parse the custom prompt (anything after the model and not starting with --)
+    const promptArgs = args.slice(Math.max(1, args.findIndex(arg => !arg.startsWith('--') && arg !== model && isNaN(parseInt(arg)))));
+    if (promptArgs.length > 0) {
+      customPrompt = promptArgs.join(' ');
+    }
+
     // Check if the message starts with !summarize or !tldr
     if (message.content.startsWith('!summarize') || message.content.startsWith('!tldr')) {
-      await handleSummarizeCommand(message, count, model);
+      await handleSummarizeCommand(message, count, model, customPrompt, language);
     }
     // Check if the message starts with !summarizeg or !tldrg
     else if (message.content.startsWith('!summarizeg') || message.content.startsWith('!tldrg')) {
-      await handleSummarizeGCommand(message, count, model);
+      await handleSummarizeGCommand(message, count, model, customPrompt, language);
     }
   });
 
@@ -55,6 +72,8 @@ export function registerCommands(client: Client): void {
       try {
         const count = commandInteraction.options.getInteger('count');
         const model = commandInteraction.options.getString('model');
+        const customPrompt = commandInteraction.options.getString('prompt');
+        const language = commandInteraction.options.getString('language') || 'english';
 
         // Get the channel where the command was used
         const channel = commandInteraction.channel;
@@ -65,9 +84,9 @@ export function registerCommands(client: Client): void {
 
         // Call the appropriate handler based on the command
         if (commandName === 'summarize' || commandName === 'tldr') {
-          await handleSummarizeCommand(commandInteraction, count, model);
+          await handleSummarizeCommand(commandInteraction, count, model, customPrompt, language);
         } else if (commandName === 'summarizeg' || commandName === 'tldrg') {
-          await handleSummarizeGCommand(commandInteraction, count, model);
+          await handleSummarizeGCommand(commandInteraction, count, model, customPrompt, language);
         }
       } catch (error) {
         logger.error('Error handling slash command:', error);
