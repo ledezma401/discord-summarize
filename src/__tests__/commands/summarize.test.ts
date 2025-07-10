@@ -17,7 +17,9 @@ jest.mock('../../models/ModelFactory.js');
 beforeEach(() => {
   // Reset the mock implementation
   ModelFactory.createModel = jest.fn() as unknown as typeof ModelFactory.createModel;
-  ModelFactory.getAvailableModels = jest.fn().mockReturnValue(['openai', 'mock']) as unknown as typeof ModelFactory.getAvailableModels;
+  ModelFactory.getAvailableModels = jest
+    .fn()
+    .mockReturnValue(['openai', 'mock']) as unknown as typeof ModelFactory.getAvailableModels;
 });
 
 // Mock OpenAI model for testing
@@ -29,7 +31,9 @@ jest.mock('../../models/OpenAIModel.js', () => {
           if (timeout === 0) {
             throw new Error('Timeout error');
           }
-          return Promise.resolve(`This is a summary from OpenAI${customPrompt ? ' with custom prompt' : ''}`);
+          return Promise.resolve(
+            `This is a summary from OpenAI${customPrompt ? ' with custom prompt' : ''}`,
+          );
         }),
         getName: jest.fn().mockReturnValue('OpenAI'),
       };
@@ -46,7 +50,9 @@ jest.mock('../../models/MockModel.js', () => {
           if (timeout === 0) {
             throw new Error('Timeout error');
           }
-          return Promise.resolve(`This is a summary from MockModel${customPrompt ? ' with custom prompt' : ''}`);
+          return Promise.resolve(
+            `This is a summary from MockModel${customPrompt ? ' with custom prompt' : ''}`,
+          );
         }),
         getName: jest.fn().mockReturnValue('MockModel'),
       };
@@ -124,7 +130,9 @@ describe('handleSummarizeCommand', () => {
         if (timeout === 0) {
           throw new Error('Timeout error');
         }
-        return Promise.resolve(`This is a summary from OpenAI${customPrompt ? ' with custom prompt: ' + customPrompt : ''}`);
+        return Promise.resolve(
+          `This is a summary from OpenAI${customPrompt ? ' with custom prompt: ' + customPrompt : ''}`,
+        );
       }),
       getName: jest.fn().mockReturnValue('OpenAI'),
     };
@@ -230,7 +238,7 @@ describe('handleSummarizeCommand', () => {
       false,
       undefined,
       customPrompt,
-      'english'
+      'english',
     );
 
     // Check that a reply was sent
@@ -253,7 +261,7 @@ describe('handleSummarizeCommand', () => {
       false,
       undefined,
       customPrompt,
-      'english'
+      'english',
     );
 
     // Check that a reply was sent

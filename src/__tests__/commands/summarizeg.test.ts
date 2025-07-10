@@ -17,7 +17,9 @@ jest.mock('../../models/ModelFactory.js');
 beforeEach(() => {
   // Reset the mock implementation
   ModelFactory.createModel = jest.fn() as unknown as typeof ModelFactory.createModel;
-  ModelFactory.getAvailableModels = jest.fn().mockReturnValue(['openai', 'mock']) as unknown as typeof ModelFactory.getAvailableModels;
+  ModelFactory.getAvailableModels = jest
+    .fn()
+    .mockReturnValue(['openai', 'mock']) as unknown as typeof ModelFactory.getAvailableModels;
 });
 
 // Mock OpenAI model for testing
@@ -35,7 +37,9 @@ jest.mock('../../models/OpenAIModel.js', () => {
               `# 📝 Summary${customPromptText}\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2`,
             );
           }
-          return Promise.resolve(`This is a summary from OpenAI${customPrompt ? ' with custom prompt' : ''}`);
+          return Promise.resolve(
+            `This is a summary from OpenAI${customPrompt ? ' with custom prompt' : ''}`,
+          );
         }),
         getName: jest.fn().mockReturnValue('OpenAI'),
       };
@@ -58,7 +62,9 @@ jest.mock('../../models/MockModel.js', () => {
               `# 📝 Summary${customPromptText}\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2`,
             );
           }
-          return Promise.resolve(`This is a summary from MockModel${customPrompt ? ' with custom prompt' : ''}`);
+          return Promise.resolve(
+            `This is a summary from MockModel${customPrompt ? ' with custom prompt' : ''}`,
+          );
         }),
         getName: jest.fn().mockReturnValue('MockModel'),
       };
@@ -142,7 +148,9 @@ describe('handleSummarizeGCommand', () => {
             `# 📝 Summary${customPromptText}\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2`,
           );
         }
-        return Promise.resolve(`This is a summary from OpenAI${customPrompt ? ' with custom prompt: ' + customPrompt : ''}`);
+        return Promise.resolve(
+          `This is a summary from OpenAI${customPrompt ? ' with custom prompt: ' + customPrompt : ''}`,
+        );
       }),
       getName: jest.fn().mockReturnValue('OpenAI'),
     };
@@ -164,7 +172,13 @@ describe('handleSummarizeGCommand', () => {
     expect(mockMessage.reply).toHaveBeenCalled();
 
     // Check that the summarize method was called with formatted=true
-    expect(mockOpenAIModel.summarize).toHaveBeenCalledWith(expect.any(Array), true, undefined, undefined, 'english');
+    expect(mockOpenAIModel.summarize).toHaveBeenCalledWith(
+      expect.any(Array),
+      true,
+      undefined,
+      undefined,
+      'english',
+    );
   });
 
   it('should handle message command with custom count', async () => {
@@ -188,7 +202,13 @@ describe('handleSummarizeGCommand', () => {
     expect(mockInteraction.reply).toHaveBeenCalled();
 
     // Check that the summarize method was called with formatted=true
-    expect(mockOpenAIModel.summarize).toHaveBeenCalledWith(expect.any(Array), true, undefined, undefined, 'english');
+    expect(mockOpenAIModel.summarize).toHaveBeenCalledWith(
+      expect.any(Array),
+      true,
+      undefined,
+      undefined,
+      'english',
+    );
   });
 
   it('should handle errors when fetching messages', async () => {
@@ -254,7 +274,7 @@ describe('handleSummarizeGCommand', () => {
       true,
       undefined,
       customPrompt,
-      'english'
+      'english',
     );
 
     // Check that a reply was sent
@@ -277,7 +297,7 @@ describe('handleSummarizeGCommand', () => {
       true,
       undefined,
       customPrompt,
-      'english'
+      'english',
     );
 
     // Check that a reply was sent

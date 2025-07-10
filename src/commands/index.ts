@@ -34,7 +34,7 @@ export function registerCommands(client: Client): void {
     }
 
     // Parse the language parameter (look for --lang=english or --lang=spanish)
-    const langArg = args.find(arg => arg.startsWith('--lang='));
+    const langArg = args.find((arg) => arg.startsWith('--lang='));
     if (langArg) {
       const langValue = langArg.split('=')[1]?.toLowerCase();
       if (langValue === 'spanish' || langValue === 'english') {
@@ -43,7 +43,12 @@ export function registerCommands(client: Client): void {
     }
 
     // Parse the custom prompt (anything after the model and not starting with --)
-    const promptArgs = args.slice(Math.max(1, args.findIndex(arg => !arg.startsWith('--') && arg !== model && isNaN(parseInt(arg)))));
+    const promptArgs = args.slice(
+      Math.max(
+        1,
+        args.findIndex((arg) => !arg.startsWith('--') && arg !== model && isNaN(parseInt(arg))),
+      ),
+    );
     if (promptArgs.length > 0) {
       customPrompt = promptArgs.join(' ');
     }

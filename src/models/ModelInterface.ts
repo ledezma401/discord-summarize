@@ -11,7 +11,13 @@ export interface ModelInterface {
    * @param language Optional language for the summary (default: 'english', options: 'english', 'spanish')
    * @returns Promise resolving to the summarized text
    */
-  summarize(messages: string[], formatted?: boolean, timeout?: number, customPrompt?: string, language?: string): Promise<string>;
+  summarize(
+    messages: string[],
+    formatted?: boolean,
+    timeout?: number,
+    customPrompt?: string,
+    language?: string,
+  ): Promise<string>;
 
   /**
    * Get the name of the model

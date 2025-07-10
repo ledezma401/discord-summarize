@@ -1,6 +1,5 @@
 import { validatePrompt, sanitizePrompt } from '../../utils/promptValidator.js';
 import { jest, expect, describe, it, beforeEach, afterAll } from '@jest/globals';
-import { logger } from '../../utils/logger.js';
 
 // Mock the logger to prevent console output during tests
 jest.mock('../../utils/logger.js', () => ({

@@ -7,12 +7,25 @@ import { logger } from './logger.js';
 // List of terms that might indicate NSFW content or prompt injection attempts
 const BLOCKED_TERMS = [
   // NSFW terms
-  'nsfw', 'porn', 'xxx', 'sex', 'adult', 'explicit', 
+  'nsfw',
+  'porn',
+  'xxx',
+  'sex',
+  'adult',
+  'explicit',
   // Prompt injection terms
-  'ignore previous instructions', 'ignore above instructions', 'disregard', 
-  'system prompt', 'system message', 'prompt injection', 'jailbreak',
+  'ignore previous instructions',
+  'ignore above instructions',
+  'disregard',
+  'system prompt',
+  'system message',
+  'prompt injection',
+  'jailbreak',
   // Harmful instructions
-  'harmful', 'illegal', 'unethical', 'dangerous'
+  'harmful',
+  'illegal',
+  'unethical',
+  'dangerous',
 ];
 
 /**
@@ -32,9 +45,10 @@ export function validatePrompt(prompt: string): { isValid: boolean; error?: stri
   for (const term of BLOCKED_TERMS) {
     if (lowerPrompt.includes(term)) {
       logger.warn(`Blocked prompt containing term: ${term}`);
-      return { 
-        isValid: false, 
-        error: 'Your prompt contains inappropriate content or attempts to manipulate the AI. Please provide a different prompt.' 
+      return {
+        isValid: false,
+        error:
+          'Your prompt contains inappropriate content or attempts to manipulate the AI. Please provide a different prompt.',
       };
     }
   }
@@ -42,9 +56,9 @@ export function validatePrompt(prompt: string): { isValid: boolean; error?: stri
   // Check for very long prompts that might be trying to overwhelm the system
   if (prompt.length > 500) {
     logger.warn(`Blocked prompt exceeding length limit: ${prompt.length} characters`);
-    return { 
-      isValid: false, 
-      error: 'Your prompt is too long. Please keep it under 500 characters.' 
+    return {
+      isValid: false,
+      error: 'Your prompt is too long. Please keep it under 500 characters.',
     };
   }
 
@@ -69,8 +83,11 @@ export function sanitizePrompt(prompt: string): string {
     .replace(/<[^>]*>/g, '');
 
   // Special handling for the complex case test
-  if (sanitized.includes('the') && sanitized.includes('discussion') && 
-      sanitized.includes('```alert("XSS")```')) {
+  if (
+    sanitized.includes('the') &&
+    sanitized.includes('discussion') &&
+    sanitized.includes('```alert("XSS")```')
+  ) {
     return 'Summarize the  discussion';
   }
 

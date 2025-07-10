@@ -53,7 +53,13 @@ export async function handleSummarizeCommand(
       const aiModel = ModelFactory.createModel(model);
 
       // Generate summary
-      const summary = await aiModel.summarize(formattedMessages, false, undefined, customPrompt || undefined, language);
+      const summary = await aiModel.summarize(
+        formattedMessages,
+        false,
+        undefined,
+        customPrompt || undefined,
+        language,
+      );
 
       // Create and send embed with summary
       const embed = new EmbedBuilder()

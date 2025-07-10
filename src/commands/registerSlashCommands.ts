@@ -29,10 +29,7 @@ const commands = [
         .setName('language')
         .setDescription('Language for the summary')
         .setRequired(false)
-        .addChoices(
-          { name: 'English', value: 'english' },
-          { name: 'Spanish', value: 'spanish' }
-        ),
+        .addChoices({ name: 'English', value: 'english' }, { name: 'Spanish', value: 'spanish' }),
     )
     .toJSON(),
   new SlashCommandBuilder()
@@ -58,10 +55,7 @@ const commands = [
         .setName('language')
         .setDescription('Language for the summary')
         .setRequired(false)
-        .addChoices(
-          { name: 'English', value: 'english' },
-          { name: 'Spanish', value: 'spanish' }
-        ),
+        .addChoices({ name: 'English', value: 'english' }, { name: 'Spanish', value: 'spanish' }),
     )
     .toJSON(),
   new SlashCommandBuilder()
@@ -87,10 +81,7 @@ const commands = [
         .setName('language')
         .setDescription('Language for the summary')
         .setRequired(false)
-        .addChoices(
-          { name: 'English', value: 'english' },
-          { name: 'Spanish', value: 'spanish' }
-        ),
+        .addChoices({ name: 'English', value: 'english' }, { name: 'Spanish', value: 'spanish' }),
     )
     .toJSON(),
   new SlashCommandBuilder()
@@ -116,10 +107,7 @@ const commands = [
         .setName('language')
         .setDescription('Language for the summary')
         .setRequired(false)
-        .addChoices(
-          { name: 'English', value: 'english' },
-          { name: 'Spanish', value: 'spanish' }
-        ),
+        .addChoices({ name: 'English', value: 'english' }, { name: 'Spanish', value: 'spanish' }),
     )
     .toJSON(),
 ];

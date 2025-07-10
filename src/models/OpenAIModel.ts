@@ -1,8 +1,8 @@
+/// <reference types="node" />
 import { ModelInterface } from './ModelInterface.js';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import { logger } from '../utils/logger.js';
-
 // Load environment variables
 dotenv.config();
 
@@ -87,7 +87,7 @@ export class OpenAIModel implements ModelInterface {
 
     // Create an AbortController to handle timeouts (skip in test environment)
     const controller = new AbortController();
-    let timeoutId: NodeJS.Timeout | null = null;
+    let timeoutId: any = null;
 
     try {
       if (!this.openai) {
@@ -95,7 +95,11 @@ export class OpenAIModel implements ModelInterface {
       }
 
       // Set the timeout if needed
-      timeoutId = this.isTestEnvironment ? null : (timeout > 0 ? setTimeout(() => controller.abort(), timeout) : null);
+      timeoutId = this.isTestEnvironment
+        ? null
+        : timeout > 0
+          ? setTimeout(() => controller.abort(), timeout)
+          : null;
 
       // Import the prompt validator
       const { validatePrompt, sanitizePrompt } = await import('../utils/promptValidator.js');
@@ -125,15 +129,17 @@ export class OpenAIModel implements ModelInterface {
           '<user_2_opinion>\n\n' +
           '<user_3_opinion>';
 
-        userPrompt = language.toLowerCase() === 'spanish' 
-          ? `Por favor, crea un resumen estructurado de la siguiente conversación, mostrando claramente los temas principales y la opinión o perspectiva de cada usuario sobre esos temas`
-          : `Please create a structured summary of the following conversation, clearly showing the main topics and each user's opinion or perspective on those topics`;
+        userPrompt =
+          language.toLowerCase() === 'spanish'
+            ? `Por favor, crea un resumen estructurado de la siguiente conversación, mostrando claramente los temas principales y la opinión o perspectiva de cada usuario sobre esos temas`
+            : `Please create a structured summary of the following conversation, clearly showing the main topics and each user's opinion or perspective on those topics`;
       } else {
         systemPrompt +=
           'Create a concise summary that captures the main points and important details.';
-        userPrompt = language.toLowerCase() === 'spanish'
-          ? `Por favor, resume la siguiente conversación`
-          : `Please summarize the following conversation`;
+        userPrompt =
+          language.toLowerCase() === 'spanish'
+            ? `Por favor, resume la siguiente conversación`
+            : `Please summarize the following conversation`;
       }
 
       // Add custom prompt if provided and valid
@@ -154,22 +160,26 @@ export class OpenAIModel implements ModelInterface {
       userPrompt += `:\n\n${messages.join('\n')}`;
 
       // Create the API call with the AbortController signal
-      const response = await this.openai.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
-          {
-            role: 'user',
-            content: userPrompt,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 500,
-        signal: controller.signal,
-      });
+      const response = await this.openai.chat.completions.create(
+        {
+          model: this.model,
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt,
+            },
+            {
+              role: 'user',
+              content: userPrompt,
+            },
+          ],
+          temperature: 0.7,
+          max_tokens: 500,
+        },
+        {
+          signal: controller.signal,
+        },
+      );
 
       // Clear the timeout if it exists
       if (timeoutId) clearTimeout(timeoutId);

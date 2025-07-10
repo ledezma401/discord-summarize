@@ -175,7 +175,7 @@ describe('GeminiModel', () => {
     });
     expect(mockChat.sendMessage).toHaveBeenCalledWith(
       expect.stringContaining('Please summarize the following conversation'),
-      { signal: expect.any(AbortSignal) }
+      { signal: expect.any(AbortSignal) },
     );
 
     // Verify the returned summary
@@ -225,7 +225,7 @@ describe('GeminiModel', () => {
     });
     expect(mockChat.sendMessage).toHaveBeenCalledWith(
       expect.stringContaining('Please create a structured summary'),
-      { signal: expect.any(AbortSignal) }
+      { signal: expect.any(AbortSignal) },
     );
 
     // Verify the returned summary
