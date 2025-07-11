@@ -35,7 +35,7 @@ export async function handleSummarizeCommand(
       return;
     }
 
-    const model = modelName || 'openai';
+    const model = modelName || 'gemini';
 
     // Fetch messages
     const messages = await fetchMessages(channel as TextChannel, messageCount);
@@ -97,8 +97,38 @@ async function fetchMessages(
   count: number,
 ): Promise<Collection<string, Message>> {
   try {
-    const messages = await channel.messages.fetch({ limit: count });
-    return messages;
+    // Discord API can only fetch up to 100 messages at a time
+    // If count > 100, we need to fetch in batches
+    const allMessages = new Collection<string, Message>();
+    let lastId: string | undefined = undefined;
+    let remaining = count;
+
+    while (remaining > 0) {
+      const options: { limit: number; before?: string } = {
+        limit: Math.min(remaining, 100),
+      };
+
+      if (lastId) {
+        options.before = lastId;
+      }
+
+      const messages = await channel.messages.fetch(options);
+
+      if (messages.size === 0) {
+        break; // No more messages to fetch
+      }
+
+      // Add fetched messages to our collection
+      messages.forEach((message) => {
+        allMessages.set(message.id, message);
+      });
+
+      // Update for next iteration
+      lastId = messages.last()?.id;
+      remaining -= messages.size;
+    }
+
+    return allMessages;
   } catch (error) {
     logger.error('Error fetching messages:', error);
     throw new Error('Failed to fetch messages from the channel.');

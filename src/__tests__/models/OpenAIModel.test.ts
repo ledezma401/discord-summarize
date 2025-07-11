@@ -193,24 +193,28 @@ describe('OpenAIModel', () => {
     const summary = await model.summarize(messages);
 
     // Verify the mock client was called with the correct parameters
-    expect(mockClient.chat.completions.create).toHaveBeenCalledWith({
-      model: expect.any(String),
-      messages: [
-        {
-          role: 'system',
-          content: expect.stringContaining(
-            'You are a helpful assistant that summarizes Discord conversations',
-          ),
-        },
-        {
-          role: 'user',
-          content: expect.stringContaining('Please summarize the following conversation'),
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 500,
-      signal: expect.any(AbortSignal),
-    });
+    expect(mockClient.chat.completions.create).toHaveBeenCalledWith(
+      {
+        model: expect.any(String),
+        messages: [
+          {
+            role: 'system',
+            content: expect.stringContaining(
+              'You are a helpful assistant that summarizes Discord conversations',
+            ),
+          },
+          {
+            role: 'user',
+            content: expect.stringContaining('Please summarize the following conversation'),
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 500,
+      },
+      {
+        signal: expect.any(AbortSignal),
+      },
+    );
 
     // Verify the returned summary
     expect(summary).toBe('This is a summary from the mock client');
@@ -244,22 +248,26 @@ describe('OpenAIModel', () => {
     const summary = await model.summarize(messages, true);
 
     // Verify the mock client was called with the correct parameters for formatted summary
-    expect(mockClient.chat.completions.create).toHaveBeenCalledWith({
-      model: expect.any(String),
-      messages: [
-        {
-          role: 'system',
-          content: expect.stringContaining('Create a well-structured summary'),
-        },
-        {
-          role: 'user',
-          content: expect.stringContaining('Please create a structured summary'),
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 500,
-      signal: expect.any(AbortSignal),
-    });
+    expect(mockClient.chat.completions.create).toHaveBeenCalledWith(
+      {
+        model: expect.any(String),
+        messages: [
+          {
+            role: 'system',
+            content: expect.stringContaining('Create a well-structured summary'),
+          },
+          {
+            role: 'user',
+            content: expect.stringContaining('Please create a structured summary'),
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 500,
+      },
+      {
+        signal: expect.any(AbortSignal),
+      },
+    );
 
     // Verify the returned summary
     expect(summary).toBe('This is a formatted summary from the mock client');

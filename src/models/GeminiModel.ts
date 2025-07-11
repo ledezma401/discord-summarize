@@ -75,7 +75,7 @@ export class GeminiModel implements ModelInterface {
 
     // Create an AbortController to handle timeouts (skip in test environment)
     const controller = new AbortController();
-    let timeoutId: any = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     try {
       if (!this.genAI) {

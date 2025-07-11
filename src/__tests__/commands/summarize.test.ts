@@ -148,7 +148,7 @@ describe('handleSummarizeCommand', () => {
     expect(mockChannel.messages.fetch).toHaveBeenCalledWith({ limit: 50 });
 
     // Check that the model was created
-    expect(ModelFactory.createModel).toHaveBeenCalledWith('openai');
+    expect(ModelFactory.createModel).toHaveBeenCalledWith('gemini');
 
     // Check that a reply was sent
     expect(mockMessage.reply).toHaveBeenCalled();
@@ -230,7 +230,7 @@ describe('handleSummarizeCommand', () => {
     await handleSummarizeCommand(mockMessage, null, null, customPrompt);
 
     // Check that the model was created
-    expect(ModelFactory.createModel).toHaveBeenCalledWith('openai');
+    expect(ModelFactory.createModel).toHaveBeenCalledWith('gemini');
 
     // Check that summarize was called with the custom prompt
     expect(mockOpenAIModel.summarize).toHaveBeenCalledWith(

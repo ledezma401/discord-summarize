@@ -21,3 +21,9 @@ This app aims to offer quick and performant summarization of discord chats.
 * Must be able to use different AI models based on configuration or input parameters.
 * Must be able to use local LLM models as a possiblity. 
 * Consider using strategy a pattern to seamlessly switch between models and keep a coherent interface.
+
+## Testing & QC
+* All Tests must PASS `npm run test`
+* Build must be error free `npm run build`
+* Min Coverage must be respected, fix until achieved.
+* All lints must pass `npm run lint`
