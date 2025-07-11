@@ -1,8 +1,8 @@
+/// <reference types="node" />
 import { ModelInterface } from './ModelInterface.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import { logger } from '../utils/logger.js';
-
 // Load environment variables
 dotenv.config();
 
@@ -57,6 +57,8 @@ export class GeminiModel implements ModelInterface {
     messages: string[],
     formatted: boolean = false,
     timeout: number = 30000,
+    customPrompt?: string,
+    language: string = 'english',
   ): Promise<string> {
     // In test environment without API key, return a mock summary
     if (this.isTestEnvironment && !this.genAI) {
@@ -71,16 +73,38 @@ export class GeminiModel implements ModelInterface {
       throw new Error('Timeout error');
     }
 
+    // Create an AbortController to handle timeouts (skip in test environment)
+    const controller = new AbortController();
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     try {
       if (!this.genAI) {
         throw new Error('Gemini client not initialized');
       }
 
+      // Set the timeout if needed
+      timeoutId = this.isTestEnvironment
+        ? null
+        : timeout > 0
+          ? setTimeout(() => controller.abort(), timeout)
+          : null;
+
       // Get the generative model
       const geminiModel = this.genAI.getGenerativeModel({ model: this.model });
 
+      // Import the prompt validator
+      const { validatePrompt, sanitizePrompt } = await import('../utils/promptValidator.js');
+
       let systemPrompt = 'You are a helpful assistant that summarizes Discord conversations. ';
       let userPrompt = '';
+
+      // Set language for the summary
+      if (language.toLowerCase() === 'spanish') {
+        systemPrompt += 'Provide the summary in Spanish. ';
+      } else {
+        // Default to English for any other value
+        systemPrompt += 'Provide the summary in English. ';
+      }
 
       if (formatted) {
         systemPrompt +=
@@ -96,12 +120,35 @@ export class GeminiModel implements ModelInterface {
           '<user_2_opinion>\n\n' +
           '<user_3_opinion>';
 
-        userPrompt = `Please create a structured summary of the following conversation, clearly showing the main topics and each user's opinion or perspective on those topics:\n\n${messages.join('\n')}`;
+        userPrompt =
+          language.toLowerCase() === 'spanish'
+            ? `Por favor, crea un resumen estructurado de la siguiente conversación, mostrando claramente los temas principales y la opinión o perspectiva de cada usuario sobre esos temas`
+            : `Please create a structured summary of the following conversation, clearly showing the main topics and each user's opinion or perspective on those topics`;
       } else {
         systemPrompt +=
           'Create a concise summary that captures the main points and important details.';
-        userPrompt = `Please summarize the following conversation:\n\n${messages.join('\n')}`;
+        userPrompt =
+          language.toLowerCase() === 'spanish'
+            ? `Por favor, resume la siguiente conversación`
+            : `Please summarize the following conversation`;
       }
+
+      // Add custom prompt if provided and valid
+      if (customPrompt) {
+        const validation = validatePrompt(customPrompt);
+        if (!validation.isValid) {
+          throw new Error(validation.error || 'Invalid custom prompt');
+        }
+
+        // Sanitize and add the custom prompt
+        const sanitizedPrompt = sanitizePrompt(customPrompt);
+        if (sanitizedPrompt) {
+          userPrompt += `. ${sanitizedPrompt}`;
+        }
+      }
+
+      // Add the messages to the prompt
+      userPrompt += `:\n\n${messages.join('\n')}`;
 
       // Create the chat session
       const chat = geminiModel.startChat({
@@ -122,11 +169,22 @@ export class GeminiModel implements ModelInterface {
       });
 
       // Generate the response
-      const result = await chat.sendMessage(userPrompt);
+      const result = await chat.sendMessage(userPrompt, { signal: controller.signal });
       const response = result.response;
+
+      // Clear the timeout if it exists
+      if (timeoutId) clearTimeout(timeoutId);
 
       return response.text() || 'Failed to generate summary';
     } catch (error) {
+      // Clear the timeout if it exists
+      if (timeoutId) clearTimeout(timeoutId);
+
+      // Check if this is an abort error (timeout)
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Timeout error');
+      }
+
       logger.error('Error summarizing with Gemini:', error);
       throw new Error(`Failed to summarize with Gemini: ${(error as Error).message}`);
     }

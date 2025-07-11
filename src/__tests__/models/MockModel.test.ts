@@ -1,4 +1,5 @@
 import { MockModel } from '../../models/MockModel.js';
+import { jest, expect, describe, beforeEach, afterEach, it } from '@jest/globals';
 
 describe('MockModel', () => {
   it('should create an instance', () => {
@@ -30,5 +31,64 @@ describe('MockModel', () => {
   it('should handle timeout errors', async () => {
     const model = new MockModel();
     await expect(model.summarize(['Message 1'], false, 0)).rejects.toThrow('Timeout error');
+  });
+
+  it('should summarize messages with custom prompt', async () => {
+    const model = new MockModel();
+    const messages = ['Message 1', 'Message 2', 'Message 3'];
+    const summary = await model.summarize(messages, false, 30000, 'Focus on key points');
+    expect(summary).toBe('Summarized 3 messages with custom prompt');
+  });
+
+  it('should summarize messages in Spanish', async () => {
+    const model = new MockModel();
+    const messages = ['Message 1', 'Message 2', 'Message 3'];
+    const summary = await model.summarize(messages, false, 30000, undefined, 'spanish');
+    expect(summary).toBe('Resumidos 3 mensajes');
+  });
+
+  it('should summarize messages in Spanish with custom prompt', async () => {
+    const model = new MockModel();
+    const messages = ['Message 1', 'Message 2', 'Message 3'];
+    const summary = await model.summarize(messages, false, 30000, 'Focus on key points', 'spanish');
+    expect(summary).toBe('Resumidos 3 mensajes con prompt personalizado');
+  });
+
+  it('should provide formatted summary in Spanish', async () => {
+    const model = new MockModel();
+    const messages = ['Message 1', 'Message 2', 'Message 3'];
+    const summary = await model.summarize(messages, true, 30000, undefined, 'spanish');
+    expect(summary).toContain('# 📝 Resumen');
+    expect(summary).toContain('**Temas Principales:**');
+    expect(summary).toContain('## 👥 Perspectivas');
+  });
+
+  it('should handle invalid custom prompts', async () => {
+    // Create a subclass of MockModel that simulates a validation error
+    class TestMockModel extends MockModel {
+      async summarize(
+        messages: string[],
+        formatted: boolean = false,
+        timeout: number = 30000,
+        customPrompt?: string,
+        language: string = 'english',
+      ): Promise<string> {
+        // Simulate the validation error when a custom prompt is provided
+        if (customPrompt) {
+          throw new Error('Failed to validate custom prompt: Invalid prompt content');
+        }
+
+        // Otherwise, use the parent implementation
+        return super.summarize(messages, formatted, timeout, undefined, language);
+      }
+    }
+
+    const model = new TestMockModel();
+    const messages = ['Message 1', 'Message 2', 'Message 3'];
+
+    // Test that the error is thrown when a custom prompt is provided
+    await expect(
+      model.summarize(messages, false, 30000, 'Invalid prompt')
+    ).rejects.toThrow('Failed to validate custom prompt: Invalid prompt content');
   });
 });

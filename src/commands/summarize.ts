@@ -8,11 +8,15 @@ import { logger } from '../utils/logger.js';
  * @param source Message or CommandInteraction that triggered the command
  * @param count Optional number of messages to summarize
  * @param modelName Optional name of the model to use
+ * @param customPrompt Optional custom prompt to personalize the summary
+ * @param language Optional language for the summary (default: 'english', options: 'english', 'spanish')
  */
 export async function handleSummarizeCommand(
   source: Message | CommandInteraction,
   count?: number | null,
   modelName?: string | null,
+  customPrompt?: string | null,
+  language: string = 'english',
 ): Promise<void> {
   try {
     // Determine the channel
@@ -31,7 +35,7 @@ export async function handleSummarizeCommand(
       return;
     }
 
-    const model = modelName || 'openai';
+    const model = modelName || 'gemini';
 
     // Fetch messages
     const messages = await fetchMessages(channel as TextChannel, messageCount);
@@ -49,7 +53,13 @@ export async function handleSummarizeCommand(
       const aiModel = ModelFactory.createModel(model);
 
       // Generate summary
-      const summary = await aiModel.summarize(formattedMessages);
+      const summary = await aiModel.summarize(
+        formattedMessages,
+        false,
+        undefined,
+        customPrompt || undefined,
+        language,
+      );
 
       // Create and send embed with summary
       const embed = new EmbedBuilder()
@@ -87,8 +97,38 @@ async function fetchMessages(
   count: number,
 ): Promise<Collection<string, Message>> {
   try {
-    const messages = await channel.messages.fetch({ limit: count });
-    return messages;
+    // Discord API can only fetch up to 100 messages at a time
+    // If count > 100, we need to fetch in batches
+    const allMessages = new Collection<string, Message>();
+    let lastId: string | undefined = undefined;
+    let remaining = count;
+
+    while (remaining > 0) {
+      const options: { limit: number; before?: string } = {
+        limit: Math.min(remaining, 100),
+      };
+
+      if (lastId) {
+        options.before = lastId;
+      }
+
+      const messages = await channel.messages.fetch(options);
+
+      if (messages.size === 0) {
+        break; // No more messages to fetch
+      }
+
+      // Add fetched messages to our collection
+      messages.forEach((message) => {
+        allMessages.set(message.id, message);
+      });
+
+      // Update for next iteration
+      lastId = messages.last()?.id;
+      remaining -= messages.size;
+    }
+
+    return allMessages;
   } catch (error) {
     logger.error('Error fetching messages:', error);
     throw new Error('Failed to fetch messages from the channel.');

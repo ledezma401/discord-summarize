@@ -17,7 +17,9 @@ jest.mock('../../models/ModelFactory.js');
 beforeEach(() => {
   // Reset the mock implementation
   ModelFactory.createModel = jest.fn() as unknown as typeof ModelFactory.createModel;
-  ModelFactory.getAvailableModels = jest.fn().mockReturnValue(['openai', 'mock']) as unknown as typeof ModelFactory.getAvailableModels;
+  ModelFactory.getAvailableModels = jest
+    .fn()
+    .mockReturnValue(['openai', 'mock']) as unknown as typeof ModelFactory.getAvailableModels;
 });
 
 // Mock OpenAI model for testing
@@ -25,16 +27,19 @@ jest.mock('../../models/OpenAIModel.js', () => {
   return {
     OpenAIModel: jest.fn().mockImplementation(() => {
       return {
-        summarize: jest.fn().mockImplementation((messages, formatted, timeout) => {
+        summarize: jest.fn().mockImplementation((messages, formatted, timeout, customPrompt) => {
           if (timeout === 0) {
             throw new Error('Timeout error');
           }
           if (formatted) {
+            const customPromptText = customPrompt ? ` (Custom: ${customPrompt})` : '';
             return Promise.resolve(
-              '# 📝 Summary\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2',
+              `# 📝 Summary${customPromptText}\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2`,
             );
           }
-          return Promise.resolve('This is a summary from OpenAI');
+          return Promise.resolve(
+            `This is a summary from OpenAI${customPrompt ? ' with custom prompt' : ''}`,
+          );
         }),
         getName: jest.fn().mockReturnValue('OpenAI'),
       };
@@ -47,16 +52,19 @@ jest.mock('../../models/MockModel.js', () => {
   return {
     MockModel: jest.fn().mockImplementation(() => {
       return {
-        summarize: jest.fn().mockImplementation((messages, formatted, timeout) => {
+        summarize: jest.fn().mockImplementation((messages, formatted, timeout, customPrompt) => {
           if (timeout === 0) {
             throw new Error('Timeout error');
           }
           if (formatted) {
+            const customPromptText = customPrompt ? ` (Custom: ${customPrompt})` : '';
             return Promise.resolve(
-              '# 📝 Summary\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2',
+              `# 📝 Summary${customPromptText}\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2`,
             );
           }
-          return Promise.resolve('This is a summary from MockModel');
+          return Promise.resolve(
+            `This is a summary from MockModel${customPrompt ? ' with custom prompt' : ''}`,
+          );
         }),
         getName: jest.fn().mockReturnValue('MockModel'),
       };
@@ -130,16 +138,19 @@ describe('handleSummarizeGCommand', () => {
 
     // Create a mock OpenAI model with a jest.fn() for summarize
     mockOpenAIModel = {
-      summarize: jest.fn().mockImplementation((messages, formatted, timeout) => {
+      summarize: jest.fn().mockImplementation((messages, formatted, timeout, customPrompt) => {
         if (timeout === 0) {
           throw new Error('Timeout error');
         }
         if (formatted) {
+          const customPromptText = customPrompt ? ` (Custom: ${customPrompt})` : '';
           return Promise.resolve(
-            '# 📝 Summary\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2',
+            `# 📝 Summary${customPromptText}\n\n**Main Topics:**\n* Topic 1\n* Topic 2\n\n## 👥 Perspectives\n\n**User1:**\n* Point of view on topic 1\n\n**User2:**\n* Point of view on topic 2`,
           );
         }
-        return Promise.resolve('This is a summary from OpenAI');
+        return Promise.resolve(
+          `This is a summary from OpenAI${customPrompt ? ' with custom prompt: ' + customPrompt : ''}`,
+        );
       }),
       getName: jest.fn().mockReturnValue('OpenAI'),
     };
@@ -155,13 +166,19 @@ describe('handleSummarizeGCommand', () => {
     expect(mockChannel.messages.fetch).toHaveBeenCalledWith({ limit: 50 });
 
     // Check that the model was created
-    expect(ModelFactory.createModel).toHaveBeenCalledWith('openai');
+    expect(ModelFactory.createModel).toHaveBeenCalledWith('gemini');
 
     // Check that a reply was sent
     expect(mockMessage.reply).toHaveBeenCalled();
 
     // Check that the summarize method was called with formatted=true
-    expect(mockOpenAIModel.summarize).toHaveBeenCalledWith(expect.any(Array), true);
+    expect(mockOpenAIModel.summarize).toHaveBeenCalledWith(
+      expect.any(Array),
+      true,
+      undefined,
+      undefined,
+      'english',
+    );
   });
 
   it('should handle message command with custom count', async () => {
@@ -185,7 +202,13 @@ describe('handleSummarizeGCommand', () => {
     expect(mockInteraction.reply).toHaveBeenCalled();
 
     // Check that the summarize method was called with formatted=true
-    expect(mockOpenAIModel.summarize).toHaveBeenCalledWith(expect.any(Array), true);
+    expect(mockOpenAIModel.summarize).toHaveBeenCalledWith(
+      expect.any(Array),
+      true,
+      undefined,
+      undefined,
+      'english',
+    );
   });
 
   it('should handle errors when fetching messages', async () => {
@@ -236,5 +259,48 @@ describe('handleSummarizeGCommand', () => {
 
     // Check that an error reply was sent
     expect(mockMessage.reply).toHaveBeenCalledWith(expect.stringContaining('Error: Timeout error'));
+  }, 10000); // Increase timeout to 10 seconds
+
+  it('should handle message command with custom prompt', async () => {
+    const customPrompt = 'Focus on the key decisions made';
+    await handleSummarizeGCommand(mockMessage, null, null, customPrompt);
+
+    // Check that the model was created
+    expect(ModelFactory.createModel).toHaveBeenCalledWith('gemini');
+
+    // Check that summarize was called with the custom prompt
+    expect(mockOpenAIModel.summarize).toHaveBeenCalledWith(
+      expect.any(Array),
+      true,
+      undefined,
+      customPrompt,
+      'english',
+    );
+
+    // Check that a reply was sent
+    expect(mockMessage.reply).toHaveBeenCalled();
+  });
+
+  it('should handle interaction command with custom prompt', async () => {
+    const customPrompt = 'Highlight any action items';
+    await handleSummarizeGCommand(mockInteraction, 10, 'openai', customPrompt);
+
+    // Check that messages were fetched with specified limit
+    expect(mockChannel.messages.fetch).toHaveBeenCalledWith({ limit: 10 });
+
+    // Check that the model was created
+    expect(ModelFactory.createModel).toHaveBeenCalledWith('openai');
+
+    // Check that summarize was called with the custom prompt
+    expect(mockOpenAIModel.summarize).toHaveBeenCalledWith(
+      expect.any(Array),
+      true,
+      undefined,
+      customPrompt,
+      'english',
+    );
+
+    // Check that a reply was sent
+    expect(mockInteraction.reply).toHaveBeenCalled();
   }, 10000); // Increase timeout to 10 seconds
 });

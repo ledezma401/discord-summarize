@@ -75,6 +75,9 @@ Once the bot is running and added to your server, you can use the following comm
     - `!summarize 100` or `!tldr 100` - Summarize the last 100 messages
     - `!summarize 30 openai` or `!tldr 30 openai` - Summarize the last 30 messages using the OpenAI model
     - `!summarize 30 gemini` or `!tldr 30 gemini` - Summarize the last 30 messages using the Gemini model
+    - `!summarize 30 openai "Focus on technical discussions"` - Summarize with a custom prompt to personalize the output
+    - `!summarize 30 openai --lang=spanish` - Summarize the last 30 messages in Spanish
+    - `!summarize 30 openai "Focus on technical discussions" --lang=spanish` - Summarize with a custom prompt in Spanish
 
 - **Formatted Summary Commands**:
   - Type `!summarizeg` in any channel to get a formatted summary with topics and user perspectives.
@@ -87,6 +90,9 @@ Once the bot is running and added to your server, you can use the following comm
     - `!summarizeg 100` or `!tldrg 100` - Summarize the last 100 messages
     - `!summarizeg 30 openai` or `!tldrg 30 openai` - Summarize the last 30 messages using the OpenAI model
     - `!summarizeg 30 gemini` or `!tldrg 30 gemini` - Summarize the last 30 messages using the Gemini model
+    - `!summarizeg 30 openai "Highlight action items"` - Summarize with a custom prompt to personalize the output
+    - `!summarizeg 30 openai --lang=spanish` - Summarize the last 30 messages in Spanish
+    - `!summarizeg 30 openai "Highlight action items" --lang=spanish` - Summarize with a custom prompt in Spanish
 
 - **Slash Commands**: 
   - Standard summary: Type `/summarize` or `/tldr` and use the interactive options.
@@ -94,6 +100,8 @@ Once the bot is running and added to your server, you can use the following comm
   - Optional parameters for all slash commands:
     - `count` - Number of messages to summarize (default: 50, must be between 1 and 500)
     - `model` - AI model to use (default: openai, options: openai, gemini)
+    - `prompt` - Custom prompt to personalize the summary (optional)
+    - `language` - Language for the summary (default: english, options: english, spanish)
 
 - **Validation Rules**:
   - The `count` parameter must be between 1 and 500 messages
@@ -105,6 +113,10 @@ Once the bot is running and added to your server, you can use the following comm
   - For Gemini, only the following models are supported:
     - `gemini-2.5-pro` (default)
     - `gemini-2.5-flash`
+  - The `prompt` parameter:
+    - Must be less than 500 characters
+    - Cannot contain NSFW content or prompt injection attempts
+    - Will be sanitized to remove potentially harmful content
 
 ## Local Development
 

@@ -1,8 +1,8 @@
+/// <reference types="node" />
 import { ModelInterface } from './ModelInterface.js';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import { logger } from '../utils/logger.js';
-
 // Load environment variables
 dotenv.config();
 
@@ -69,6 +69,8 @@ export class OpenAIModel implements ModelInterface {
     messages: string[],
     formatted: boolean = false,
     timeout: number = 30000,
+    customPrompt?: string,
+    language: string = 'english',
   ): Promise<string> {
     // For testing timeouts - check this first regardless of environment
     if (timeout === 0) {
@@ -83,20 +85,35 @@ export class OpenAIModel implements ModelInterface {
       return `This is a mock summary of ${messages.length} messages from OpenAI model`;
     }
 
+    // Create an AbortController to handle timeouts (skip in test environment)
+    const controller = new AbortController();
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     try {
       if (!this.openai) {
         throw new Error('OpenAI client not initialized');
       }
 
-      // Set up a timeout promise that rejects after the specified timeout
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        if (timeout > 0) {
-          setTimeout(() => reject(new Error('Timeout error')), timeout);
-        }
-      });
+      // Set the timeout if needed
+      timeoutId = this.isTestEnvironment
+        ? null
+        : timeout > 0
+          ? setTimeout(() => controller.abort(), timeout)
+          : null;
+
+      // Import the prompt validator
+      const { validatePrompt, sanitizePrompt } = await import('../utils/promptValidator.js');
 
       let systemPrompt = 'You are a helpful assistant that summarizes Discord conversations. ';
       let userPrompt = '';
+
+      // Set language for the summary
+      if (language.toLowerCase() === 'spanish') {
+        systemPrompt += 'Provide the summary in Spanish. ';
+      } else {
+        // Default to English for any other value
+        systemPrompt += 'Provide the summary in English. ';
+      }
 
       if (formatted) {
         systemPrompt +=
@@ -112,38 +129,71 @@ export class OpenAIModel implements ModelInterface {
           '<user_2_opinion>\n\n' +
           '<user_3_opinion>';
 
-        userPrompt = `Please create a structured summary of the following conversation, clearly showing the main topics and each user's opinion or perspective on those topics:\n\n${messages.join('\n')}`;
+        userPrompt =
+          language.toLowerCase() === 'spanish'
+            ? `Por favor, crea un resumen estructurado de la siguiente conversación, mostrando claramente los temas principales y la opinión o perspectiva de cada usuario sobre esos temas`
+            : `Please create a structured summary of the following conversation, clearly showing the main topics and each user's opinion or perspective on those topics`;
       } else {
         systemPrompt +=
           'Create a concise summary that captures the main points and important details.';
-        userPrompt = `Please summarize the following conversation:\n\n${messages.join('\n')}`;
+        userPrompt =
+          language.toLowerCase() === 'spanish'
+            ? `Por favor, resume la siguiente conversación`
+            : `Please summarize the following conversation`;
       }
 
-      // Create the API call promise
-      const apiCallPromise = this.openai.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
-          {
-            role: 'user',
-            content: userPrompt,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 500,
-      });
+      // Add custom prompt if provided and valid
+      if (customPrompt) {
+        const validation = validatePrompt(customPrompt);
+        if (!validation.isValid) {
+          throw new Error(validation.error || 'Invalid custom prompt');
+        }
 
-      // Race the API call against the timeout
-      const response = (await Promise.race([
-        apiCallPromise,
-        timeoutPromise,
-      ])) as OpenAI.Chat.Completions.ChatCompletion;
+        // Sanitize and add the custom prompt
+        const sanitizedPrompt = sanitizePrompt(customPrompt);
+        if (sanitizedPrompt) {
+          userPrompt += `. ${sanitizedPrompt}`;
+        }
+      }
+
+      // Add the messages to the prompt
+      userPrompt += `:\n\n${messages.join('\n')}`;
+
+      // Create the API call with the AbortController signal
+      const response = await this.openai.chat.completions.create(
+        {
+          model: this.model,
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt,
+            },
+            {
+              role: 'user',
+              content: userPrompt,
+            },
+          ],
+          temperature: 0.7,
+          max_tokens: 500,
+        },
+        {
+          signal: controller.signal,
+        },
+      );
+
+      // Clear the timeout if it exists
+      if (timeoutId) clearTimeout(timeoutId);
 
       return response.choices[0]?.message?.content || 'Failed to generate summary';
     } catch (error) {
+      // Clear the timeout if it exists
+      if (timeoutId) clearTimeout(timeoutId);
+
+      // Check if this is an abort error (timeout)
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Timeout error');
+      }
+
       logger.error('Error summarizing with OpenAI:', error);
       throw new Error(`Failed to summarize with OpenAI: ${(error as Error).message}`);
     }

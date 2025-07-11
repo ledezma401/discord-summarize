@@ -18,6 +18,19 @@ const commands = [
         .setDescription('AI model to use for summarization')
         .setRequired(false),
     )
+    .addStringOption((option) =>
+      option
+        .setName('prompt')
+        .setDescription('Custom prompt to personalize the summary')
+        .setRequired(false),
+    )
+    .addStringOption((option) =>
+      option
+        .setName('language')
+        .setDescription('Language for the summary')
+        .setRequired(false)
+        .addChoices({ name: 'English', value: 'english' }, { name: 'Spanish', value: 'spanish' }),
+    )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('tldr')
@@ -30,6 +43,19 @@ const commands = [
         .setName('model')
         .setDescription('AI model to use for summarization')
         .setRequired(false),
+    )
+    .addStringOption((option) =>
+      option
+        .setName('prompt')
+        .setDescription('Custom prompt to personalize the summary')
+        .setRequired(false),
+    )
+    .addStringOption((option) =>
+      option
+        .setName('language')
+        .setDescription('Language for the summary')
+        .setRequired(false)
+        .addChoices({ name: 'English', value: 'english' }, { name: 'Spanish', value: 'spanish' }),
     )
     .toJSON(),
   new SlashCommandBuilder()
@@ -44,6 +70,19 @@ const commands = [
         .setDescription('AI model to use for summarization')
         .setRequired(false),
     )
+    .addStringOption((option) =>
+      option
+        .setName('prompt')
+        .setDescription('Custom prompt to personalize the summary')
+        .setRequired(false),
+    )
+    .addStringOption((option) =>
+      option
+        .setName('language')
+        .setDescription('Language for the summary')
+        .setRequired(false)
+        .addChoices({ name: 'English', value: 'english' }, { name: 'Spanish', value: 'spanish' }),
+    )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('tldrg')
@@ -56,6 +95,19 @@ const commands = [
         .setName('model')
         .setDescription('AI model to use for summarization')
         .setRequired(false),
+    )
+    .addStringOption((option) =>
+      option
+        .setName('prompt')
+        .setDescription('Custom prompt to personalize the summary')
+        .setRequired(false),
+    )
+    .addStringOption((option) =>
+      option
+        .setName('language')
+        .setDescription('Language for the summary')
+        .setRequired(false)
+        .addChoices({ name: 'English', value: 'english' }, { name: 'Spanish', value: 'spanish' }),
     )
     .toJSON(),
 ];
