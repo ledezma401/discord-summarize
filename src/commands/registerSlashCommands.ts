@@ -7,6 +7,10 @@ import { logger } from '../utils/logger.js';
  */
 const commands = [
   new SlashCommandBuilder()
+    .setName('help')
+    .setDescription('Shows all available commands and how to use them')
+    .toJSON(),
+  new SlashCommandBuilder()
     .setName('summarize')
     .setDescription('Summarize recent messages in the channel')
     .addIntegerOption((option) =>

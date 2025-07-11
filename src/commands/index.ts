@@ -1,6 +1,7 @@
 import { Client, Events, ChatInputCommandInteraction } from 'discord.js';
 import { handleSummarizeCommand } from './summarize.js';
 import { handleSummarizeGCommand } from './summarizeg.js';
+import { handleHelpCommand } from './help.js';
 import { logger } from '../utils/logger.js';
 
 /**
@@ -61,6 +62,10 @@ export function registerCommands(client: Client): void {
     else if (message.content.startsWith('!summarizeg') || message.content.startsWith('!tldrg')) {
       await handleSummarizeGCommand(message, count, model, customPrompt, language);
     }
+    // Check if the message starts with !help
+    else if (message.content.startsWith('!help')) {
+      await handleHelpCommand(message);
+    }
   });
 
   // Handle slash commands (e.g., /summarize, /tldr, /summarizeg, /tldrg)
@@ -72,9 +77,15 @@ export function registerCommands(client: Client): void {
     const commandName = commandInteraction.commandName;
 
     // Check if this is one of our commands
-    if (['summarize', 'tldr', 'summarizeg', 'tldrg'].includes(commandName)) {
+    if (['summarize', 'tldr', 'summarizeg', 'tldrg', 'help'].includes(commandName)) {
       await commandInteraction.deferReply();
       try {
+        // Handle help command separately as it doesn't need parameters
+        if (commandName === 'help') {
+          await handleHelpCommand(commandInteraction);
+          return;
+        }
+
         const count = commandInteraction.options.getInteger('count');
         const model = commandInteraction.options.getString('model');
         const customPrompt = commandInteraction.options.getString('prompt');

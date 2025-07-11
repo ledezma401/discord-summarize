@@ -19,6 +19,8 @@ This app aims to offer quick and performant summarization of discord chats.
 * Documentation must be updated every time to ensure completion.
 * Main README.md must exist with step by step instructions on how to install on a discord server.
 * Additional local-installation.md must include very brief and step by step instructions to successfully set up the app locally and test it.
+* When creating a new command, always create a slash command counterpart.
+* When creating new commands always add them to !help
 
 ## Coding Guidelines
 * Must be modular enough for scalability.
