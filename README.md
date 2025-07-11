@@ -12,6 +12,8 @@ A Discord bot that summarizes chat conversations using AI models.
 * `/summarizeg <count=50> <model=openAI>` - Slash command version of the summarizeg command.
 * `!tldrg <count=50> <model=openAI>` - Alternative command that does the same as `!summarizeg`.
 * `/tldrg <count=50> <model=openAI>` - Alternative slash command that does the same as `/summarizeg`.
+* `!p <model=gemini> <prompt>` - Process a prompt with an AI model and return the response.
+* `/p <prompt> <model=gemini>` - Slash command version of the p command.
 
 ## Installation on a Discord Server
 
@@ -94,14 +96,24 @@ Once the bot is running and added to your server, you can use the following comm
     - `!summarizeg 30 openai --lang=spanish` - Summarize the last 30 messages in Spanish
     - `!summarizeg 30 openai "Highlight action items" --lang=spanish` - Summarize with a custom prompt in Spanish
 
+- **Prompt Processing Commands**:
+  - Type `!p What is the capital of France?` to get a response from the default AI model.
+  - Type `!p openai Explain quantum computing` to specify a different model.
+  - The command processes the prompt and returns the AI model's response.
+  - The prompt is validated to ensure it doesn't contain NSFW content or prompt injection attempts.
+
 - **Slash Commands**: 
   - Standard summary: Type `/summarize` or `/tldr` and use the interactive options.
   - Formatted summary: Type `/summarizeg` or `/tldrg` and use the interactive options.
-  - Optional parameters for all slash commands:
+  - Prompt processing: Type `/p` and enter your prompt in the interactive options.
+  - Optional parameters for summary slash commands:
     - `count` - Number of messages to summarize (default: 50, must be between 1 and 500)
     - `model` - AI model to use (default: openai, options: openai, gemini)
     - `prompt` - Custom prompt to personalize the summary (optional)
     - `language` - Language for the summary (default: english, options: english, spanish)
+  - Optional parameters for the `/p` command:
+    - `prompt` - The prompt to process (required)
+    - `model` - AI model to use (default: gemini, options: openai, gemini)
 
 - **Validation Rules**:
   - The `count` parameter must be between 1 and 500 messages

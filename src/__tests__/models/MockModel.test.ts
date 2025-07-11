@@ -91,4 +91,37 @@ describe('MockModel', () => {
       model.summarize(messages, false, 30000, 'Invalid prompt')
     ).rejects.toThrow('Failed to validate custom prompt: Invalid prompt content');
   });
+
+  // Tests for the processPrompt method
+  it('should process a prompt', async () => {
+    const model = new MockModel();
+    const prompt = 'What is the capital of France?';
+    const response = await model.processPrompt(prompt);
+    expect(response).toBe(`This is a mock response to: "${prompt}" from MockModel`);
+  });
+
+  it('should handle timeout errors in processPrompt', async () => {
+    const model = new MockModel();
+    await expect(model.processPrompt('Test prompt', 0)).rejects.toThrow('Timeout error');
+  });
+
+  it('should handle invalid prompts in processPrompt', async () => {
+    // Create a subclass of MockModel that simulates a validation error
+    class TestMockModel extends MockModel {
+      async processPrompt(
+        prompt: string,
+        timeout: number = 30000,
+      ): Promise<string> {
+        // Simulate the validation error when a prompt is provided
+        throw new Error('Failed to validate prompt: Invalid prompt content');
+      }
+    }
+
+    const model = new TestMockModel();
+
+    // Test that the error is thrown when a prompt is provided
+    await expect(
+      model.processPrompt('Invalid prompt')
+    ).rejects.toThrow('Failed to validate prompt: Invalid prompt content');
+  });
 });

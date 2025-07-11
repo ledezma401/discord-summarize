@@ -3,6 +3,7 @@ import { ModelInterface } from './ModelInterface.js';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import { logger } from '../utils/logger.js';
+import { generateSystemPrompt, generateUserPrompt } from '../prompts/summaryPrompts.js';
 // Load environment variables
 dotenv.config();
 
@@ -104,60 +105,21 @@ export class OpenAIModel implements ModelInterface {
       // Import the prompt validator
       const { validatePrompt, sanitizePrompt } = await import('../utils/promptValidator.js');
 
-      let systemPrompt = 'You are a helpful assistant that summarizes Discord conversations. ';
-      let userPrompt = '';
-
-      // Set language for the summary
-      if (language.toLowerCase() === 'spanish') {
-        systemPrompt += 'Provide the summary in Spanish. ';
-      } else {
-        // Default to English for any other value
-        systemPrompt += 'Provide the summary in English. ';
-      }
-
-      if (formatted) {
-        systemPrompt +=
-          'Create a well-structured summary with the following format: ' +
-          '1) A clear summary of the main topics being discussed, ' +
-          "2) Each user's opinion or take on the main topics, presented one after another. " +
-          'If several topics are discussed by different users, summarize what each person discussed. ' +
-          'If an opinion/take cannot be detected for some users, they can be ignored. ' +
-          'Use formatting like bold text, bullet points, and emojis to highlight key elements, but keep it minimal to ensure readability. ' +
-          'The output should follow this structure:\n' +
-          '<summary_of_main_topics>\n\n' +
-          '<user_1_opinion>\n\n' +
-          '<user_2_opinion>\n\n' +
-          '<user_3_opinion>';
-
-        userPrompt =
-          language.toLowerCase() === 'spanish'
-            ? `Por favor, crea un resumen estructurado de la siguiente conversación, mostrando claramente los temas principales y la opinión o perspectiva de cada usuario sobre esos temas`
-            : `Please create a structured summary of the following conversation, clearly showing the main topics and each user's opinion or perspective on those topics`;
-      } else {
-        systemPrompt +=
-          'Create a concise summary that captures the main points and important details.';
-        userPrompt =
-          language.toLowerCase() === 'spanish'
-            ? `Por favor, resume la siguiente conversación`
-            : `Please summarize the following conversation`;
-      }
-
-      // Add custom prompt if provided and valid
+      // Validate custom prompt if provided
+      let sanitizedCustomPrompt: string | undefined = undefined;
       if (customPrompt) {
         const validation = validatePrompt(customPrompt);
         if (!validation.isValid) {
           throw new Error(validation.error || 'Invalid custom prompt');
         }
 
-        // Sanitize and add the custom prompt
-        const sanitizedPrompt = sanitizePrompt(customPrompt);
-        if (sanitizedPrompt) {
-          userPrompt += `. ${sanitizedPrompt}`;
-        }
+        // Sanitize the custom prompt
+        sanitizedCustomPrompt = sanitizePrompt(customPrompt);
       }
 
-      // Add the messages to the prompt
-      userPrompt += `:\n\n${messages.join('\n')}`;
+      // Generate prompts using the extracted prompt engineering module
+      const systemPrompt = generateSystemPrompt(formatted, language);
+      const userPrompt = generateUserPrompt(formatted, language, sanitizedCustomPrompt, messages);
 
       // Create the API call with the AbortController signal
       const response = await this.openai.chat.completions.create(
@@ -196,6 +158,92 @@ export class OpenAIModel implements ModelInterface {
 
       logger.error('Error summarizing with OpenAI:', error);
       throw new Error(`Failed to summarize with OpenAI: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * Process a general prompt using OpenAI
+   * @param prompt The prompt to process
+   * @param timeout Optional timeout in milliseconds
+   * @returns Promise resolving to the model's response
+   */
+  public async processPrompt(prompt: string, timeout: number = 30000): Promise<string> {
+    // For testing timeouts - check this first regardless of environment
+    if (timeout === 0) {
+      throw new Error('Timeout error');
+    }
+
+    // In test environment without API key, return a mock response
+    if (this.isTestEnvironment && !this.openai) {
+      return `This is a mock response to: "${prompt}" from OpenAI model`;
+    }
+
+    // Create an AbortController to handle timeouts (skip in test environment)
+    const controller = new AbortController();
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    try {
+      if (!this.openai) {
+        throw new Error('OpenAI client not initialized');
+      }
+
+      // Set the timeout if needed
+      timeoutId = this.isTestEnvironment
+        ? null
+        : timeout > 0
+          ? setTimeout(() => controller.abort(), timeout)
+          : null;
+
+      // Import the prompt validator
+      const { validatePrompt, sanitizePrompt } = await import('../utils/promptValidator.js');
+
+      // Validate prompt
+      const validation = validatePrompt(prompt);
+      if (!validation.isValid) {
+        throw new Error(validation.error || 'Invalid prompt');
+      }
+
+      // Sanitize the prompt
+      const sanitizedPrompt = sanitizePrompt(prompt);
+
+      // Create the API call with the AbortController signal
+      const response = await this.openai.chat.completions.create(
+        {
+          model: this.model,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You are a helpful assistant that provides informative and accurate responses.',
+            },
+            {
+              role: 'user',
+              content: sanitizedPrompt,
+            },
+          ],
+          temperature: 0.7,
+          max_tokens: 500,
+        },
+        {
+          signal: controller.signal,
+        },
+      );
+
+      // Clear the timeout if it exists
+      if (timeoutId) clearTimeout(timeoutId);
+
+      return response.choices[0]?.message?.content || 'Failed to generate response';
+    } catch (error) {
+      // Clear the timeout if it exists
+      if (timeoutId) clearTimeout(timeoutId);
+
+      // Check if this is an abort error (timeout)
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Timeout error');
+      }
+
+      logger.error('Error processing prompt with OpenAI:', error);
+      throw new Error(`Failed to process prompt with OpenAI: ${(error as Error).message}`);
     }
   }
 

@@ -30,6 +30,14 @@ export async function handleHelpCommand(source: Message | CommandInteraction): P
           inline: false,
         },
         {
+          name: '!p',
+          value:
+            'Process a prompt with an AI model.\n' +
+            'Usage: `!p [model=gemini] <prompt>`\n' +
+            'Example: `!p What is the capital of France?` or `!p openai Explain quantum computing`',
+          inline: false,
+        },
+        {
           name: '!help',
           value:
             'Shows this help message with all available commands and how to use them.\n' +

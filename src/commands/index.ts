@@ -2,7 +2,9 @@ import { Client, Events, ChatInputCommandInteraction } from 'discord.js';
 import { handleSummarizeCommand } from './summarize.js';
 import { handleSummarizeGCommand } from './summarizeg.js';
 import { handleHelpCommand } from './help.js';
+import { handlePCommand } from './p.js';
 import { logger } from '../utils/logger.js';
+import { ModelFactory } from '../models/ModelFactory.js';
 
 /**
  * Register all commands with the Discord client
@@ -66,6 +68,32 @@ export function registerCommands(client: Client): void {
     else if (message.content.startsWith('!help')) {
       await handleHelpCommand(message);
     }
+    // Check if the message starts with !p
+    else if (message.content.startsWith('!p')) {
+      // Extract the prompt (everything after !p)
+      const prompt = message.content.substring(3).trim();
+      // Extract model if specified (format: !p [model] prompt)
+      let promptModel = null;
+      let promptText = prompt;
+
+      // Check if the first word might be a model name
+      const firstWord = prompt.split(' ')[0];
+      if (firstWord && !firstWord.startsWith('--')) {
+        try {
+          // Try to create the model to see if it's valid
+          ModelFactory.createModel(firstWord);
+          // If we get here, it's a valid model
+          promptModel = firstWord;
+          // Remove the model from the prompt
+          promptText = prompt.substring(firstWord.length).trim();
+        } catch {
+          // Not a valid model, use the entire prompt
+          promptText = prompt;
+        }
+      }
+
+      await handlePCommand(message, promptText, promptModel);
+    }
   });
 
   // Handle slash commands (e.g., /summarize, /tldr, /summarizeg, /tldrg)
@@ -77,7 +105,7 @@ export function registerCommands(client: Client): void {
     const commandName = commandInteraction.commandName;
 
     // Check if this is one of our commands
-    if (['summarize', 'tldr', 'summarizeg', 'tldrg', 'help'].includes(commandName)) {
+    if (['summarize', 'tldr', 'summarizeg', 'tldrg', 'help', 'p'].includes(commandName)) {
       await commandInteraction.deferReply();
       try {
         // Handle help command separately as it doesn't need parameters
@@ -103,6 +131,16 @@ export function registerCommands(client: Client): void {
           await handleSummarizeCommand(commandInteraction, count, model, customPrompt, language);
         } else if (commandName === 'summarizeg' || commandName === 'tldrg') {
           await handleSummarizeGCommand(commandInteraction, count, model, customPrompt, language);
+        } else if (commandName === 'p') {
+          const prompt = commandInteraction.options.getString('prompt');
+          const model = commandInteraction.options.getString('model');
+
+          if (!prompt) {
+            await commandInteraction.editReply('Error: Please provide a prompt.');
+            return;
+          }
+
+          await handlePCommand(commandInteraction, prompt, model);
         }
       } catch (error) {
         logger.error('Error handling slash command:', error);

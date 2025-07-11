@@ -55,6 +55,35 @@ export class MockModel implements ModelInterface {
   }
 
   /**
+   * Process a general prompt (mock implementation)
+   * @param prompt The prompt to process
+   * @param timeout Optional timeout in milliseconds
+   * @returns Promise resolving to a mock response
+   */
+  public async processPrompt(prompt: string, timeout: number = 30000): Promise<string> {
+    // For testing timeouts
+    if (timeout === 0) {
+      throw new Error('Timeout error');
+    }
+
+    // Validate prompt
+    try {
+      // Import the prompt validator
+      const { validatePrompt } = await import('../utils/promptValidator.js');
+
+      const validation = validatePrompt(prompt);
+      if (!validation.isValid) {
+        throw new Error(validation.error || 'Invalid prompt');
+      }
+    } catch (error) {
+      logger.error('Error validating prompt:', error);
+      throw new Error(`Failed to validate prompt: ${(error as Error).message}`);
+    }
+
+    return `This is a mock response to: "${prompt}" from MockModel`;
+  }
+
+  /**
    * Get the name of the model
    * @returns The name of the model
    */

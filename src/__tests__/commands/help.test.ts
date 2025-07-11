@@ -49,24 +49,24 @@ describe('handleHelpCommand', () => {
 
     // Check that a reply was sent
     expect(mockMessage.reply).toHaveBeenCalled();
-    
+
     // Verify that the reply contains an embed
     const replyArg = mockMessage.reply.mock.calls[0][0];
     expect(replyArg).toHaveProperty('embeds');
     expect(replyArg.embeds).toHaveLength(1);
-    
+
     // Verify that the embed has the correct title and fields
     const embed = replyArg.embeds[0];
     expect(embed.data.title).toBe('Discord Summarize Bot - Available Commands');
     expect(embed.data.fields).toHaveLength(5); // 5 command fields
-    
+
     // Verify that all commands are included in the help message
     const fieldNames = embed.data.fields.map(field => field.name);
-    expect(fieldNames).toContain('!summarize / /summarize');
-    expect(fieldNames).toContain('!tldr / /tldr');
-    expect(fieldNames).toContain('!summarizeg / /summarizeg');
-    expect(fieldNames).toContain('!tldrg / /tldrg');
-    expect(fieldNames).toContain('!help / /help');
+    expect(fieldNames).toContain('!summarize / !tldr');
+    expect(fieldNames).toContain('!summarizeg / !tldrg');
+    expect(fieldNames).toContain('!p');
+    expect(fieldNames).toContain('!help');
+    expect(fieldNames).toContain('Note');
   });
 
   it('should handle interaction command', async () => {
@@ -74,12 +74,12 @@ describe('handleHelpCommand', () => {
 
     // Check that a reply was sent
     expect(mockInteraction.reply).toHaveBeenCalled();
-    
+
     // Verify that the reply contains an embed
     const replyArg = mockInteraction.reply.mock.calls[0][0];
     expect(replyArg).toHaveProperty('embeds');
     expect(replyArg.embeds).toHaveLength(1);
-    
+
     // Verify that the embed has the correct title and fields
     const embed = replyArg.embeds[0];
     expect(embed.data.title).toBe('Discord Summarize Bot - Available Commands');
@@ -94,7 +94,7 @@ describe('handleHelpCommand', () => {
 
     // Check that the reply was attempted
     expect(mockMessage.reply).toHaveBeenCalled();
-    
+
     // No assertion for error handling since it's logged but not re-thrown
   });
 

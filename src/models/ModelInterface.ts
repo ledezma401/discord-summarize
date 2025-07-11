@@ -1,5 +1,5 @@
 /**
- * Interface for AI models that can summarize text
+ * Interface for AI models that can summarize text and process prompts
  */
 export interface ModelInterface {
   /**
@@ -18,6 +18,14 @@ export interface ModelInterface {
     customPrompt?: string,
     language?: string,
   ): Promise<string>;
+
+  /**
+   * Process a general prompt
+   * @param prompt The prompt to process
+   * @param timeout Optional timeout in milliseconds
+   * @returns Promise resolving to the model's response
+   */
+  processPrompt(prompt: string, timeout?: number): Promise<string>;
 
   /**
    * Get the name of the model
