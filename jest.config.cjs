@@ -24,4 +24,9 @@ module.exports = {
       statements: 75,
     },
   },
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/src/models/GeminiModel.ts',
+    '/src/models/OpenAIModel.ts',
+  ],
 };

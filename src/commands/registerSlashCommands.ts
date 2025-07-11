@@ -11,6 +11,19 @@ const commands = [
     .setDescription('Shows all available commands and how to use them')
     .toJSON(),
   new SlashCommandBuilder()
+    .setName('p')
+    .setDescription('Process a prompt with an AI model')
+    .addStringOption((option) =>
+      option.setName('prompt').setDescription('The prompt to process').setRequired(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName('model')
+        .setDescription('AI model to use for processing the prompt')
+        .setRequired(false),
+    )
+    .toJSON(),
+  new SlashCommandBuilder()
     .setName('summarize')
     .setDescription('Summarize recent messages in the channel')
     .addIntegerOption((option) =>
