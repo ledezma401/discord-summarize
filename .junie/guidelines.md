@@ -4,7 +4,11 @@ This app aims to offer quick and performant summarization of discord chats.
 
 
 ## Features
-* `!summarize <count=50> <model=openAI>` / `/summarize <count=50> <model=openAI>` summarizes the last `count` chats using a variety of AI models (default openAI).
+* `!summarize <count=50> <model=gemini>` / `/summarize <count=50> <model=openAI>` summarizes the last `count` chats using a variety of AI models (default gemini).
+* `!summarizeg <count=50> <model=gemini>` / `/summarizeg <count=50> <model=openAI>` summarizes the last `count` chats using a variety of AI models (default gemini).
+* `!tldr` Alias of !summarize
+* `!tldrg` Alias of !summarizeg
+* `!help` shows help of available commands and their signatures
 
 ## General Technical Design
 * Must use the latest typescript and node v20.14.0
@@ -21,6 +25,9 @@ This app aims to offer quick and performant summarization of discord chats.
 * Must be able to use different AI models based on configuration or input parameters.
 * Must be able to use local LLM models as a possiblity. 
 * Consider using strategy a pattern to seamlessly switch between models and keep a coherent interface.
+* Respect rules of `eslint.config.js`
+* Respect rules of `.prettierrc`
+* Respect rules of `tsconfig.json`
 
 ## Testing & QC
 * All Tests must PASS `npm run test`
