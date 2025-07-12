@@ -1,5 +1,6 @@
 import { Message, CommandInteraction, EmbedBuilder } from 'discord.js';
 import { logger } from '../utils/logger.js';
+import { safeReply } from '../utils/discordUtils.js';
 
 /**
  * Handle the help command
@@ -73,16 +74,6 @@ async function reply(
   source: Message | CommandInteraction,
   content: string | { embeds: EmbedBuilder[] },
 ): Promise<Message | undefined> {
-  try {
-    if (source instanceof Message) {
-      return await source.reply(content);
-    } else if (source.deferred || source.replied) {
-      await source.editReply(content);
-    } else {
-      await source.reply(content);
-    }
-  } catch (error) {
-    logger.error('Error replying:', error);
-  }
-  return undefined;
+  // Use the safeReply function from discordUtils to handle character limits
+  return await safeReply(source, content);
 }

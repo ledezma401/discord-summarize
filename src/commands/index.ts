@@ -5,6 +5,7 @@ import { handleHelpCommand } from './help.js';
 import { handlePCommand } from './p.js';
 import { logger } from '../utils/logger.js';
 import { ModelFactory } from '../models/ModelFactory.js';
+import { safeReply } from '../utils/discordUtils.js';
 
 /**
  * Register all commands with the Discord client
@@ -56,20 +57,23 @@ export function registerCommands(client: Client): void {
       customPrompt = promptArgs.join(' ');
     }
 
-    // Check if the message starts with !summarize or !tldr
-    if (message.content.startsWith('!summarize') || message.content.startsWith('!tldr')) {
+    // Extract the command part (first word)
+    const commandPart = message.content.split(' ')[0];
+
+    // Check for exact command matches
+    if (commandPart === '!summarize' || commandPart === '!tldr') {
       await handleSummarizeCommand(message, count, model, customPrompt, language);
     }
-    // Check if the message starts with !summarizeg or !tldrg
-    else if (message.content.startsWith('!summarizeg') || message.content.startsWith('!tldrg')) {
+    // Check for exact command matches for summarizeg
+    else if (commandPart === '!summarizeg' || commandPart === '!tldrg') {
       await handleSummarizeGCommand(message, count, model, customPrompt, language);
     }
-    // Check if the message starts with !help
-    else if (message.content.startsWith('!help')) {
+    // Check for exact command match for help
+    else if (commandPart === '!help') {
       await handleHelpCommand(message);
     }
-    // Check if the message starts with !p
-    else if (message.content.startsWith('!p')) {
+    // Check for exact command match for p
+    else if (commandPart === '!p') {
       // Extract the prompt (everything after !p)
       const prompt = message.content.substring(3).trim();
       // Extract model if specified (format: !p [model] prompt)
@@ -122,7 +126,7 @@ export function registerCommands(client: Client): void {
         // Get the channel where the command was used
         const channel = commandInteraction.channel;
         if (!channel) {
-          await commandInteraction.editReply('Cannot access the channel.');
+          await safeReply(commandInteraction, 'Cannot access the channel.');
           return;
         }
 
@@ -136,7 +140,7 @@ export function registerCommands(client: Client): void {
           const model = commandInteraction.options.getString('model');
 
           if (!prompt) {
-            await commandInteraction.editReply('Error: Please provide a prompt.');
+            await safeReply(commandInteraction, 'Error: Please provide a prompt.');
             return;
           }
 
@@ -144,7 +148,7 @@ export function registerCommands(client: Client): void {
         }
       } catch (error) {
         logger.error('Error handling slash command:', error);
-        await commandInteraction.editReply('An error occurred while processing the command.');
+        await safeReply(commandInteraction, 'An error occurred while processing the command.');
       }
     }
   });

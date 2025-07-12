@@ -2,6 +2,7 @@ import { Message, CommandInteraction, EmbedBuilder } from 'discord.js';
 import { ModelFactory } from '../models/ModelFactory.js';
 import { logger } from '../utils/logger.js';
 import { validatePrompt } from '../utils/promptValidator.js';
+import { safeReply } from '../utils/discordUtils.js';
 
 /**
  * Handle the p command
@@ -76,17 +77,6 @@ async function reply(
   source: Message | CommandInteraction,
   content: string | { embeds: EmbedBuilder[] },
 ): Promise<Message | undefined> {
-  try {
-    if (source instanceof Message) {
-      return await source.reply(content);
-    } else if (source.deferred || source.replied) {
-      await source.editReply(content);
-      return undefined;
-    } else {
-      await source.reply(content);
-    }
-  } catch (error) {
-    logger.error('Error replying:', error);
-  }
-  return undefined;
+  // Use the safeReply function from discordUtils to handle character limits
+  return await safeReply(source, content);
 }

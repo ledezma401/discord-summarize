@@ -57,7 +57,7 @@ export class GeminiModel implements ModelInterface {
   public async summarize(
     messages: string[],
     formatted: boolean = false,
-    timeout: number = 30000,
+    timeout: number = 90000,
     customPrompt?: string,
     language: string = 'english',
   ): Promise<string> {
@@ -168,7 +168,7 @@ export class GeminiModel implements ModelInterface {
    * @param timeout Optional timeout in milliseconds
    * @returns Promise resolving to the model's response
    */
-  public async processPrompt(prompt: string, timeout: number = 30000): Promise<string> {
+  public async processPrompt(prompt: string, timeout: number = 90000): Promise<string> {
     // In test environment without API key, return a mock response
     if (this.isTestEnvironment && !this.genAI) {
       return `This is a mock response to: "${prompt}" from Gemini model`;

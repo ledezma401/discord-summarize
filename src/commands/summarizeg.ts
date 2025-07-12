@@ -2,6 +2,7 @@ import { Message, CommandInteraction, TextChannel, EmbedBuilder, Collection } fr
 import { ModelFactory } from '../models/ModelFactory.js';
 import { config } from '../utils/config.js';
 import { logger } from '../utils/logger.js';
+import { safeReply, createMultipleEmbeds } from '../utils/discordUtils.js';
 
 /**
  * Handle the summarizeg command
@@ -52,6 +53,13 @@ export async function handleSummarizeGCommand(
     try {
       const aiModel = ModelFactory.createModel(model);
 
+      // Show typing indicator if the channel supports it
+      if (source instanceof Message && source.channel && 'sendTyping' in source.channel) {
+        let sendtypeRes = await source.channel.sendTyping();
+
+        logger.debug('Send typing result:', sendtypeRes);
+      }
+
       // Generate summary with the special format
       const summary = await aiModel.summarize(
         formattedMessages,
@@ -61,18 +69,17 @@ export async function handleSummarizeGCommand(
         language,
       );
 
-      // Create and send embed with summary
-      const embed = new EmbedBuilder()
-        .setTitle('✨ Chat Summary ✨')
-        .setDescription(summary)
-        .setColor('#0099ff')
-        .setFooter({
-          text: `Summarized ${messages.size} messages using ${aiModel.getName()}`,
-        })
-        .setTimestamp();
+      logger.info(`Summary length ${summary.length}`);
+      // Create embeds with summary, splitting if necessary
+      const footerText = `Summarized ${messages.size} messages using ${aiModel.getName()} and !summarizeg command.`;
+      const embeds = createMultipleEmbeds('✨ Chat Summary ✨', summary, '#0099ff', {
+        text: footerText,
+      });
 
-      await reply(source, { embeds: [embed] });
+      let res = await reply(source, { embeds });
+      logger.debug('Reply result:', res);
     } catch (error) {
+      logger.error('Error in AI model:', error);
       await reply(
         source,
         `Error: ${(error as Error).message}. Available models: ${ModelFactory.getAvailableModels().join(
@@ -163,17 +170,6 @@ async function reply(
   source: Message | CommandInteraction,
   content: string | { embeds: EmbedBuilder[] },
 ): Promise<Message | undefined> {
-  try {
-    if (source instanceof Message) {
-      return await source.reply(content);
-    } else if (source.deferred || source.replied) {
-      await source.editReply(content);
-      return undefined;
-    } else {
-      await source.reply(content);
-    }
-  } catch (error) {
-    logger.error('Error replying:', error);
-  }
-  return undefined;
+  // Use the safeReply function from discordUtils to handle character limits
+  return await safeReply(source, content);
 }
