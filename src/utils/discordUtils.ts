@@ -158,21 +158,38 @@ function groupEmbedsIntoBatches(embeds: EmbedBuilder[]): EmbedBuilder[][] {
  * Reply to a message or interaction, handling long responses by splitting into multiple embeds
  * @param source Message or CommandInteraction to reply to
  * @param content Content to send or embed options
+ * @param dm Whether to send the reply as a DM to the user instead of in the channel
  * @returns The sent message (for Message) or undefined (for CommandInteraction)
  */
 export async function safeReply(
   source: Message | CommandInteraction,
   content: string | { embeds: EmbedBuilder[] },
+  dm: boolean = false,
 ): Promise<Message | undefined> {
   try {
     // If content is a string, send it directly (strings are usually short error messages)
     if (typeof content === 'string') {
-      if (source instanceof Message) {
-        return await source.reply(content);
-      } else if (source.deferred || source.replied) {
-        await source.editReply(content);
+      if (dm) {
+        // Send as DM
+        if (source instanceof Message) {
+          return await source.author.send(content);
+        } else {
+          await source.user.send(content);
+          if (source.deferred || source.replied) {
+            await source.editReply('Summary sent as a DM.');
+          } else {
+            await source.reply('Summary sent as a DM.');
+          }
+        }
       } else {
-        await source.reply(content);
+        // Reply in channel
+        if (source instanceof Message) {
+          return await source.reply(content);
+        } else if (source.deferred || source.replied) {
+          await source.editReply(content);
+        } else {
+          await source.reply(content);
+        }
       }
       return undefined;
     }
@@ -182,12 +199,27 @@ export async function safeReply(
 
     // If there are no embeds, send as is
     if (embeds.length === 0) {
-      if (source instanceof Message) {
-        return await source.reply(content);
-      } else if (source.deferred || source.replied) {
-        await source.editReply(content);
+      if (dm) {
+        // Send as DM
+        if (source instanceof Message) {
+          return await source.author.send(content);
+        } else {
+          await source.user.send(content);
+          if (source.deferred || source.replied) {
+            await source.editReply('Summary sent as a DM.');
+          } else {
+            await source.reply('Summary sent as a DM.');
+          }
+        }
       } else {
-        await source.reply(content);
+        // Reply in channel
+        if (source instanceof Message) {
+          return await source.reply(content);
+        } else if (source.deferred || source.replied) {
+          await source.editReply(content);
+        } else {
+          await source.reply(content);
+        }
       }
       return undefined;
     }
@@ -199,12 +231,27 @@ export async function safeReply(
 
       // If all embeds fit in a single batch, send as is
       if (embedBatches.length === 1) {
-        if (source instanceof Message) {
-          return await source.reply(content);
-        } else if (source.deferred || source.replied) {
-          await source.editReply(content);
+        if (dm) {
+          // Send as DM
+          if (source instanceof Message) {
+            return await source.author.send(content);
+          } else {
+            await source.user.send(content);
+            if (source.deferred || source.replied) {
+              await source.editReply('Summary sent as a DM.');
+            } else {
+              await source.reply('Summary sent as a DM.');
+            }
+          }
         } else {
-          await source.reply(content);
+          // Reply in channel
+          if (source instanceof Message) {
+            return await source.reply(content);
+          } else if (source.deferred || source.replied) {
+            await source.editReply(content);
+          } else {
+            await source.reply(content);
+          }
         }
         return undefined;
       }
@@ -212,31 +259,63 @@ export async function safeReply(
       // Otherwise, send each batch as a separate message
       let firstReply: Message | undefined;
 
-      // Send the first batch as a reply
-      if (source instanceof Message) {
-        firstReply = await source.reply({
+      if (dm) {
+        // Send as DM
+        const user = source instanceof Message ? source.author : source.user;
+
+        // Send first batch as DM
+        firstReply = await user.send({
           embeds: embedBatches[0],
         });
-      } else if (source.deferred || source.replied) {
-        await source.editReply({
-          embeds: embedBatches[0],
-        });
+
+        // Send confirmation in the channel if it's an interaction
+        if (!(source instanceof Message)) {
+          if (source.deferred || source.replied) {
+            await source.editReply('Summary sent as a DM.');
+          } else {
+            await source.reply('Summary sent as a DM.');
+          }
+        }
       } else {
-        await source.reply({
-          embeds: embedBatches[0],
-        });
+        // Send the first batch as a reply
+        if (source instanceof Message) {
+          firstReply = await source.reply({
+            embeds: embedBatches[0],
+          });
+        } else if (source.deferred || source.replied) {
+          await source.editReply({
+            embeds: embedBatches[0],
+          });
+        } else {
+          await source.reply({
+            embeds: embedBatches[0],
+          });
+        }
       }
 
       // Send the rest of the batches as follow-up messages
       for (let i = 1; i < embedBatches.length; i++) {
-        if (source instanceof Message && source.channel && source.channel instanceof TextChannel) {
-          await source.channel.send({
+        if (dm) {
+          // Send as DM
+          const user = source instanceof Message ? source.author : source.user;
+          await user.send({
             embeds: embedBatches[i],
           });
-        } else if ('followUp' in source) {
-          await source.followUp({
-            embeds: embedBatches[i],
-          });
+        } else {
+          // Send in channel
+          if (
+            source instanceof Message &&
+            source.channel &&
+            source.channel instanceof TextChannel
+          ) {
+            await source.channel.send({
+              embeds: embedBatches[i],
+            });
+          } else if ('followUp' in source) {
+            await source.followUp({
+              embeds: embedBatches[i],
+            });
+          }
         }
       }
 
@@ -263,23 +342,149 @@ export async function safeReply(
 
       // Send the first batch as a reply
       let firstReply: Message | undefined;
-      if (source instanceof Message) {
-        firstReply = await source.reply({
+
+      if (dm) {
+        // Send as DM
+        const user = source instanceof Message ? source.author : source.user;
+
+        // Send first batch as DM
+        firstReply = await user.send({
           embeds: embedBatches[0].length === 1 ? [embedBatches[0][0]] : embedBatches[0],
         });
-      } else if (source.deferred || source.replied) {
-        await source.editReply({
-          embeds: embedBatches[0].length === 1 ? [embedBatches[0][0]] : embedBatches[0],
-        });
+
+        // Send confirmation in the channel if it's an interaction
+        if (!(source instanceof Message)) {
+          if (source.deferred || source.replied) {
+            await source.editReply('Summary sent as a DM.');
+          } else {
+            await source.reply('Summary sent as a DM.');
+          }
+        }
       } else {
-        await source.reply({
-          embeds: embedBatches[0].length === 1 ? [embedBatches[0][0]] : embedBatches[0],
-        });
+        // Reply in channel
+        if (source instanceof Message) {
+          firstReply = await source.reply({
+            embeds: embedBatches[0].length === 1 ? [embedBatches[0][0]] : embedBatches[0],
+          });
+        } else if (source.deferred || source.replied) {
+          await source.editReply({
+            embeds: embedBatches[0].length === 1 ? [embedBatches[0][0]] : embedBatches[0],
+          });
+        } else {
+          await source.reply({
+            embeds: embedBatches[0].length === 1 ? [embedBatches[0][0]] : embedBatches[0],
+          });
+        }
       }
 
       // Send the rest of the batches as follow-up messages
       if (embedBatches.length > 1) {
         for (let i = 1; i < embedBatches.length; i++) {
+          if (dm) {
+            // Send as DM
+            const user = source instanceof Message ? source.author : source.user;
+            await user.send({
+              embeds: embedBatches[i],
+            });
+          } else {
+            // Send in channel
+            if (
+              source instanceof Message &&
+              source.channel &&
+              source.channel instanceof TextChannel
+            ) {
+              await source.channel.send({
+                embeds: embedBatches[i],
+              });
+            } else if ('followUp' in source) {
+              await source.followUp({
+                embeds: embedBatches[i],
+              });
+            }
+          }
+        }
+      }
+
+      return firstReply;
+    } else {
+      // If the description is within the limit, check if we need to split the embeds due to total size limit
+      // Group embeds into batches that fit within Discord's message size limit
+      const embedBatches = groupEmbedsIntoBatches(embeds);
+
+      // If all embeds fit in a single batch, send as is
+      if (embedBatches.length === 1) {
+        if (dm) {
+          // Send as DM
+          if (source instanceof Message) {
+            return await source.author.send(content);
+          } else {
+            await source.user.send(content);
+            if (source.deferred || source.replied) {
+              await source.editReply('Summary sent as a DM.');
+            } else {
+              await source.reply('Summary sent as a DM.');
+            }
+          }
+        } else {
+          // Reply in channel
+          if (source instanceof Message) {
+            return await source.reply(content);
+          } else if (source.deferred || source.replied) {
+            await source.editReply(content);
+          } else {
+            await source.reply(content);
+          }
+        }
+        return undefined;
+      }
+
+      // Otherwise, send each batch as a separate message
+      let firstReply: Message | undefined;
+
+      if (dm) {
+        // Send as DM
+        const user = source instanceof Message ? source.author : source.user;
+
+        // Send first batch as DM
+        firstReply = await user.send({
+          embeds: embedBatches[0],
+        });
+
+        // Send confirmation in the channel if it's an interaction
+        if (!(source instanceof Message)) {
+          if (source.deferred || source.replied) {
+            await source.editReply('Summary sent as a DM.');
+          } else {
+            await source.reply('Summary sent as a DM.');
+          }
+        }
+      } else {
+        // Send the first batch as a reply
+        if (source instanceof Message) {
+          firstReply = await source.reply({
+            embeds: embedBatches[0],
+          });
+        } else if (source.deferred || source.replied) {
+          await source.editReply({
+            embeds: embedBatches[0],
+          });
+        } else {
+          await source.reply({
+            embeds: embedBatches[0],
+          });
+        }
+      }
+
+      // Send the rest of the batches as follow-up messages
+      for (let i = 1; i < embedBatches.length; i++) {
+        if (dm) {
+          // Send as DM
+          const user = source instanceof Message ? source.author : source.user;
+          await user.send({
+            embeds: embedBatches[i],
+          });
+        } else {
+          // Send in channel
           if (
             source instanceof Message &&
             source.channel &&
@@ -297,55 +502,6 @@ export async function safeReply(
       }
 
       return firstReply;
-    } else {
-      // If the description is within the limit, check if we need to split the embeds due to total size limit
-      // Group embeds into batches that fit within Discord's message size limit
-      const embedBatches = groupEmbedsIntoBatches(embeds);
-
-      // If all embeds fit in a single batch, send as is
-      if (embedBatches.length === 1) {
-        if (source instanceof Message) {
-          return await source.reply(content);
-        } else if (source.deferred || source.replied) {
-          await source.editReply(content);
-        } else {
-          await source.reply(content);
-        }
-        return undefined;
-      }
-
-      // Otherwise, send each batch as a separate message
-      let firstReply: Message | undefined;
-
-      // Send the first batch as a reply
-      if (source instanceof Message) {
-        firstReply = await source.reply({
-          embeds: embedBatches[0],
-        });
-      } else if (source.deferred || source.replied) {
-        await source.editReply({
-          embeds: embedBatches[0],
-        });
-      } else {
-        await source.reply({
-          embeds: embedBatches[0],
-        });
-      }
-
-      // Send the rest of the batches as follow-up messages
-      for (let i = 1; i < embedBatches.length; i++) {
-        if (source instanceof Message && source.channel && source.channel instanceof TextChannel) {
-          await source.channel.send({
-            embeds: embedBatches[i],
-          });
-        } else if ('followUp' in source) {
-          await source.followUp({
-            embeds: embedBatches[i],
-          });
-        }
-      }
-
-      return firstReply;
     }
   } catch (error) {
     logger.error('Error in safeReply:', error);
@@ -353,10 +509,21 @@ export async function safeReply(
     // Try to send a simple error message if the original reply failed
     try {
       const errorMessage = `Error sending reply: ${(error as Error).message}`;
-      if (source instanceof Message) {
-        return await source.reply(errorMessage);
-      } else if (!source.replied) {
-        await source.reply(errorMessage);
+
+      // If dm was requested but failed, try to reply in the channel instead
+      if (dm) {
+        if (source instanceof Message) {
+          return await source.reply(errorMessage);
+        } else if (!source.replied) {
+          await source.reply(errorMessage);
+        }
+      } else {
+        // Original reply in channel failed
+        if (source instanceof Message) {
+          return await source.reply(errorMessage);
+        } else if (!source.replied) {
+          await source.reply(errorMessage);
+        }
       }
     } catch (followUpError) {
       logger.error('Failed to send error message:', followUpError);

@@ -9,6 +9,12 @@ const commands = [
   new SlashCommandBuilder()
     .setName('help')
     .setDescription('Shows all available commands and how to use them')
+    .addBooleanOption((option) =>
+      option
+        .setName('dm')
+        .setDescription('Send the help message as a direct message instead of in the channel')
+        .setRequired(false),
+    )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('p')
@@ -48,6 +54,12 @@ const commands = [
         .setRequired(false)
         .addChoices({ name: 'English', value: 'english' }, { name: 'Spanish', value: 'spanish' }),
     )
+    .addBooleanOption((option) =>
+      option
+        .setName('dm')
+        .setDescription('Send the summary as a direct message instead of in the channel')
+        .setRequired(false),
+    )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('tldr')
@@ -73,6 +85,12 @@ const commands = [
         .setDescription('Language for the summary')
         .setRequired(false)
         .addChoices({ name: 'English', value: 'english' }, { name: 'Spanish', value: 'spanish' }),
+    )
+    .addBooleanOption((option) =>
+      option
+        .setName('dm')
+        .setDescription('Send the summary as a direct message instead of in the channel')
+        .setRequired(false),
     )
     .toJSON(),
   new SlashCommandBuilder()
@@ -100,6 +118,12 @@ const commands = [
         .setRequired(false)
         .addChoices({ name: 'English', value: 'english' }, { name: 'Spanish', value: 'spanish' }),
     )
+    .addBooleanOption((option) =>
+      option
+        .setName('dm')
+        .setDescription('Send the summary as a direct message instead of in the channel')
+        .setRequired(false),
+    )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('tldrg')
@@ -125,6 +149,12 @@ const commands = [
         .setDescription('Language for the summary')
         .setRequired(false)
         .addChoices({ name: 'English', value: 'english' }, { name: 'Spanish', value: 'spanish' }),
+    )
+    .addBooleanOption((option) =>
+      option
+        .setName('dm')
+        .setDescription('Send the summary as a direct message instead of in the channel')
+        .setRequired(false),
     )
     .toJSON(),
 ];

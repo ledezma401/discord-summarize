@@ -14,6 +14,7 @@
     "test:coverage": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.cjs --coverage --testPathIgnorePatterns=integration",
     "test:integration": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.cjs --testMatch='**/*.integration.test.ts'",
     "test:all": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.cjs",
+    "test:file": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.cjs",
     "lint": "eslint 'src/**/*.ts' --ignore-pattern 'dist/' --ignore-pattern 'node_modules/' --ignore-pattern 'coverage/' --ignore-pattern 'src/**/*.test.ts'",
     "lint:fix": "eslint 'src/**/*.ts' --ignore-pattern 'dist/' --ignore-pattern 'node_modules/' --ignore-pattern 'coverage/' --ignore-pattern 'src/**/*.test.ts' --fix",
     "lint:test": "eslint 'src/**/*.test.ts' --ignore-pattern 'dist/' --ignore-pattern 'node_modules/' --ignore-pattern 'coverage/'",

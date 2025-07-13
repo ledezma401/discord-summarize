@@ -23,6 +23,7 @@ export function registerCommands(client: Client): void {
     let model = null;
     let customPrompt = null;
     let language = 'english'; // Default language
+    let dm = false; // Default to replying in channel
 
     // Parse the count parameter (first argument)
     if (args.length > 0) {
@@ -46,6 +47,12 @@ export function registerCommands(client: Client): void {
       }
     }
 
+    // Parse the DM parameter (look for --dm)
+    const dmArg = args.find((arg) => arg === '--dm' || arg === 'dm');
+    if (dmArg) {
+      dm = true;
+    }
+
     // Parse the custom prompt (anything after the model and not starting with --)
     const promptArgs = args.slice(
       Math.max(
@@ -61,16 +68,22 @@ export function registerCommands(client: Client): void {
     const commandPart = message.content.split(' ')[0];
 
     // Check for exact command matches
-    if (commandPart === '!summarize' || commandPart === '!tldr') {
-      await handleSummarizeCommand(message, count, model, customPrompt, language);
+    if (commandPart === '!summarize' || commandPart === '!tldr' || commandPart === '!s') {
+      await handleSummarizeCommand(message, count, model, customPrompt, language, dm);
     }
     // Check for exact command matches for summarizeg
-    else if (commandPart === '!summarizeg' || commandPart === '!tldrg') {
-      await handleSummarizeGCommand(message, count, model, customPrompt, language);
+    else if (commandPart === '!summarizeg' || commandPart === '!tldrg' || commandPart === '!sg') {
+      await handleSummarizeGCommand(message, count, model, customPrompt, language, dm);
+    }
+    // Check for DM-specific aliases
+    else if (commandPart === '!sdm') {
+      await handleSummarizeCommand(message, count, model, customPrompt, language, true);
+    } else if (commandPart === '!sgdm') {
+      await handleSummarizeGCommand(message, count, model, customPrompt, language, true);
     }
     // Check for exact command match for help
     else if (commandPart === '!help') {
-      await handleHelpCommand(message);
+      await handleHelpCommand(message, dm);
     }
     // Check for exact command match for p
     else if (commandPart === '!p') {
@@ -114,7 +127,8 @@ export function registerCommands(client: Client): void {
       try {
         // Handle help command separately as it doesn't need parameters
         if (commandName === 'help') {
-          await handleHelpCommand(commandInteraction);
+          const dm = commandInteraction.options.getBoolean('dm') || false;
+          await handleHelpCommand(commandInteraction, dm);
           return;
         }
 
@@ -122,6 +136,7 @@ export function registerCommands(client: Client): void {
         const model = commandInteraction.options.getString('model');
         const customPrompt = commandInteraction.options.getString('prompt');
         const language = commandInteraction.options.getString('language') || 'english';
+        const dm = commandInteraction.options.getBoolean('dm') || false;
 
         // Get the channel where the command was used
         const channel = commandInteraction.channel;
@@ -132,9 +147,23 @@ export function registerCommands(client: Client): void {
 
         // Call the appropriate handler based on the command
         if (commandName === 'summarize' || commandName === 'tldr') {
-          await handleSummarizeCommand(commandInteraction, count, model, customPrompt, language);
+          await handleSummarizeCommand(
+            commandInteraction,
+            count,
+            model,
+            customPrompt,
+            language,
+            dm,
+          );
         } else if (commandName === 'summarizeg' || commandName === 'tldrg') {
-          await handleSummarizeGCommand(commandInteraction, count, model, customPrompt, language);
+          await handleSummarizeGCommand(
+            commandInteraction,
+            count,
+            model,
+            customPrompt,
+            language,
+            dm,
+          );
         } else if (commandName === 'p') {
           const prompt = commandInteraction.options.getString('prompt');
           const model = commandInteraction.options.getString('model');

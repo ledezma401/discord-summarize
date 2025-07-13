@@ -11,6 +11,7 @@ import { safeReply, createMultipleEmbeds } from '../utils/discordUtils.js';
  * @param modelName Optional name of the model to use
  * @param customPrompt Optional custom prompt to personalize the summary
  * @param language Optional language for the summary (default: 'english', options: 'english', 'spanish')
+ * @param dm Optional flag to send the summary as a DM instead of replying in the channel
  */
 export async function handleSummarizeCommand(
   source: Message | CommandInteraction,
@@ -18,12 +19,13 @@ export async function handleSummarizeCommand(
   modelName?: string | null,
   customPrompt?: string | null,
   language: string = 'english',
+  dm: boolean = false,
 ): Promise<void> {
   try {
     // Determine the channel
     const channel = source instanceof Message ? source.channel : source.channel;
     if (!channel || !('messages' in channel)) {
-      await reply(source, 'Cannot access messages in this channel.');
+      await reply(source, 'Cannot access messages in this channel.', dm);
       return;
     }
 
@@ -32,7 +34,7 @@ export async function handleSummarizeCommand(
 
     // Validate count parameter
     if (messageCount < 1 || messageCount > 500) {
-      await reply(source, 'Error: Count must be between 1 and 500.');
+      await reply(source, 'Error: Count must be between 1 and 500.', dm);
       return;
     }
 
@@ -42,7 +44,7 @@ export async function handleSummarizeCommand(
     const messages = await fetchMessages(channel as TextChannel, messageCount);
 
     if (messages.size === 0) {
-      await reply(source, 'No messages found to summarize.');
+      await reply(source, 'No messages found to summarize.', dm);
       return;
     }
 
@@ -73,18 +75,19 @@ export async function handleSummarizeCommand(
       const footerText = `Summarized ${messages.size} messages using ${aiModel.getName()} and !summarize command.`;
       const embeds = createMultipleEmbeds('Chat Summary', summary, '#0099ff', { text: footerText });
 
-      await reply(source, { embeds });
+      await reply(source, { embeds }, dm);
     } catch (error) {
       await reply(
         source,
         `Error: ${(error as Error).message}. Available models: ${ModelFactory.getAvailableModels().join(
           ', ',
         )}`,
+        dm,
       );
     }
   } catch (error) {
     logger.error('Error in summarize command:', error);
-    await reply(source, `An error occurred: ${(error as Error).message}`);
+    await reply(source, `An error occurred: ${(error as Error).message}`, dm);
   }
 }
 
@@ -159,12 +162,14 @@ function formatMessages(messages: Collection<string, Message>): string[] {
  * Reply to a message or interaction
  * @param source Message or CommandInteraction to reply to
  * @param content Content to send
+ * @param dm Whether to send the reply as a DM to the user instead of in the channel
  * @returns The sent message (for Message) or undefined (for CommandInteraction)
  */
 async function reply(
   source: Message | CommandInteraction,
   content: string | { embeds: EmbedBuilder[] },
+  dm: boolean = false,
 ): Promise<Message | undefined> {
   // Use the safeReply function from discordUtils to handle character limits
-  return await safeReply(source, content);
+  return await safeReply(source, content, dm);
 }
