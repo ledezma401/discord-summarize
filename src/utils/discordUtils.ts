@@ -49,8 +49,15 @@ export function splitTextIntoChunks(
     }
 
     // Add the chunk and update the remaining text
-    chunks.push(remainingText.substring(0, breakPoint));
-    remainingText = remainingText.substring(breakPoint).trim();
+    let chunk = remainingText.substring(0, breakPoint);
+    // Trim trailing whitespace from the chunk
+    chunk = chunk.replace(/\s+$/, '');
+    chunks.push(chunk);
+
+    // Update the remaining text, trimming any leading whitespace
+    remainingText = remainingText.substring(breakPoint);
+    // Handle consecutive whitespace characters
+    remainingText = remainingText.replace(/^[\n\s]+/, '');
   }
 
   return chunks;
